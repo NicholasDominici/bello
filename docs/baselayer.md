@@ -100,7 +100,7 @@ cancellation, redacted results, and bounded retry. They do not establish live sa
 
 Live verification also needs the actual sandbox API key, a current principal, and the deployed
 merchant's working registry checks. Run the full denial/access/denial sequence after configuring
-those services. Stripe Link CLI and Visa checkout are separate follow-up work.
+those services. [Link wallet OAuth and checkout](link.md) are configured separately. Visa is not integrated.
 
 Protocol references: [minting credentials](https://docs.baselayer.com/docs/minting-credentials),
 [presentation and verification](https://docs.baselayer.com/docs/presenting-and-verifying-a-credential),

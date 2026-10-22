@@ -1,7 +1,8 @@
 # Text Bell through Linq
 
 Bell's assigned demo line is **+12025550100** (`+12025550100` in configuration).
-Linq carries iMessage and SMS. Stripe Link checkout is a separate future integration.
+Linq carries iMessage and SMS. [Link wallet OAuth and checkout](link.md) use this channel's
+verified sender identity and require separate configuration.
 
 ```text
 Your phone -> Linq -> Bell /eve/v1/linq -> Eve conversation
@@ -104,4 +105,5 @@ signatures, wrong lines or senders, groups, bot echoes, outbound messages, and i
 A live phone round trip also needs the actual Linq credentials, reachable webhook, allowed sender,
 and Browserbase/OpenAI credentials. Verified browser mode alone does not establish inbound delivery.
 For Baselayer-protected merchant access, follow [the separate sandbox flow](baselayer.md).
-It needs a compatible merchant and a current verified principal. Payment integrations are future work.
+It needs a compatible merchant and a current verified principal. For wallet access and checkout,
+follow [the Link guide](link.md).

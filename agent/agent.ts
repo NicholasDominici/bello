@@ -9,6 +9,7 @@ export default defineAgent({
       "@browserbasehq/sdk",
       "@browserbasehq/stagehand",
       "playwright-core",
+      "pg",
     ],
   },
   limits: { sessionTimeoutMs: 24 * 60 * 60 * 1_000 },

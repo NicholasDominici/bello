@@ -56,6 +56,9 @@ Best Buy browsing does not require Baselayer and does not demonstrate merchant v
 
 ## Optional integrations
 
+- Link: connect a wallet from an allowlisted Linq conversation using OAuth. Bell sends a
+  consent URL and resumes in the same chat. PostgreSQL stores encrypted per-sender grants;
+  checkout retains Eve confirmation and Link purchase approval. Follow [Link setup](docs/link.md).
 - 1Password: for local desktop access, set `OP_ACCOUNT="Your account name"` in `.env.local`,
   using the account name shown in the 1Password sidebar. In the desktop app, enable
   **Settings > Developer > Integrate with other apps** under the SDK options, then approve
@@ -73,8 +76,8 @@ Best Buy browsing does not require Baselayer and does not demonstrate merchant v
   `BROWSIE_PUBLIC_URL` to the app's reachable origin. Configure this before asking for a handoff.
 
 The shared runtime retains its `BROWSIE_*` configuration names. Bell does not copy the Context or
-Vault administration screens. Their agent tools remain available. Stripe Link CLI and Visa
-checkout are follow-up integrations; this project does not yet submit payments.
+Vault administration screens. Their agent tools remain available. Link checkout is available
+through the private Linq flow after configuration and approval. Visa is not integrated.
 
 ## Check the code
 
@@ -84,7 +87,8 @@ pnpm check:workspace
 
 This checks Browsie and Bell, including both standalone production builds. Browsie's live tests
 remain opt-in and skip without their required configuration. The default suite makes no live
-provider calls. A successful build verifies compilation only.
+provider calls. Set `TEST_LINK_DATABASE_URL` to a disposable PostgreSQL database to include
+Link persistence tests; CI runs these automatically. A successful build verifies compilation only.
 Keep this demo local until you configure application authentication and durable storage. Eve's
 default HTTP channel rejects unauthenticated production traffic. The shared vault/Context data
 uses local files and is scoped to a single demo operator. See

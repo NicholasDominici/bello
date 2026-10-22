@@ -7,7 +7,7 @@ of the browser integration in one pull request.
 ```text
 agent/                  Bell's Eve agent, Linq channel, and tool imports
 app/                    Bell's web interface and handoff routes
-server/                 Bell's Baselayer integration
+server/                 Bell's Baselayer and Link OAuth integrations
 packages/browsie/        Browsie source, standalone app, shared exports, and tests
 scripts/                Bell's standalone mint command
 tests/                  Bell's tests
