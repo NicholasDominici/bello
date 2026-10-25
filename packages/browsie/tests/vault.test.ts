@@ -4,8 +4,8 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { AtomicFileVaultStore, NativeVaultProvider } from "../server/vault/native";
-import { generateTotp } from "../server/vault/totp";
+import { AtomicFileVaultStore, NativeVaultProvider } from "../../../server/browser/vault/native";
+import { generateTotp } from "../../../server/browser/vault/totp";
 
 async function fixture(key = Buffer.alloc(32, 7)) {
   const dir = await mkdtemp(join(tmpdir(), "browsie-vault-")),

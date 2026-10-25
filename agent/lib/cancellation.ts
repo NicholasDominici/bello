@@ -34,7 +34,10 @@ export async function runWithCancellation<T>(
     signal.addEventListener("abort", onAbort, { once: true });
   });
   const pending: Promise<Outcome<T>> = Promise.resolve()
-    .then(operation)
+    .then(() => {
+      if (signal.aborted) throw new BrowsieCancellationError();
+      return operation();
+    })
     .then(
       (value): Outcome<T> => ({ kind: "completed", value }),
       (error): Outcome<T> => ({ kind: "failed", error }),
