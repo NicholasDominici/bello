@@ -19,7 +19,6 @@ export interface BrowserState {
   proxyLocation?: BrowserProxyLocation;
   sessionId?: string;
   liveUrl?: string;
-  liveViewToken?: string;
   url?: string;
   title?: string;
   screenshotDataUrl?: string;

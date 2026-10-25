@@ -95,7 +95,7 @@ does not provide Browserbase Contexts, Live View, proxies, or Verified Browsers.
 | `BROWSERBASE_API_KEY`      | Hosted mode  | Creates Browserbase sessions and Contexts.                           |
 | `STAGEHAND_BROWSER`        | No           | `auto`, `local`, or `browserbase`.                                   |
 | `BROWSIE_MODEL`            | No           | Model name. Default: `gpt-5.6-sol`.                                  |
-| `BROWSIE_HANDOFF_SECRET`   | Live View    | Encrypts scoped Live View and handoff tokens. Use at least 32 characters. |
+| `BROWSIE_HANDOFF_SECRET`   | Handoff      | Encrypts scoped handoff tokens. Use at least 32 characters.              |
 | `BROWSIE_PUBLIC_URL`       | Handoff      | Public HTTPS origin for handoff links.                               |
 | `BROWSIE_VAULT_MASTER_KEY` | Native vault | Encrypts the local vault example.                                    |
 | `OP_SERVICE_ACCOUNT_TOKEN` | 1Password    | Gives server-side access to an allowed 1Password vault.              |
@@ -154,8 +154,8 @@ multi-tenant service.
   form entry and vault login; start a new session with logging off before entering private data.
 - The standalone web app and management APIs require the configured operator login. Use HTTPS
   outside loopback. Management tokens are signed, expire after six hours, and are invalidated by
-  operator credential rotation. Agent Live View additionally requires a ten-minute token scoped
-  to that browser; knowing an unrelated Browserbase session ID does not grant access.
+  operator credential rotation. Agent Live View verifies the active browser in the authenticated task history; knowing an
+  unrelated Browserbase session ID does not grant access. Public handoff links expire after ten minutes.
 - Configure `BROWSIE_LINQ_ALLOWED_USER_IDS` for trusted operators before enabling Linq; an empty
   list accepts no senders. All configured operators share the same vaults and Contexts.
 

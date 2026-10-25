@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { issueContextCapability, requireContextCapability } from "../server/context-capability";
-import { issueBrowserHandoffToken } from "../server/handoff";
+import { activeBrowserSession } from "../server/agent-live-view";
+import type { MessageStreamEvent } from "eve/client";
 import { studioAccess, studioAuth } from "../server/studio-auth";
 
-const mocks = vi.hoisted(() => ({ debug: vi.fn(), getSession: vi.fn(), getLiveView: vi.fn(), status: vi.fn(), list: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() }));
+const mocks = vi.hoisted(() => ({ debug: vi.fn(), snapshot: vi.fn(), getSession: vi.fn(), getLiveView: vi.fn(), status: vi.fn(), list: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() }));
+vi.mock("eve/client", () => ({ Client: class { sessions = { attach: () => ({ snapshot: mocks.snapshot }) }; } }));
 vi.mock("@browserbasehq/sdk", () => ({ default: class { sessions = { debug: mocks.debug }; } }));
 vi.mock("../server/context-studio", () => ({ getContextStudio: () => mocks }));
 vi.mock("../server/vault/index", () => ({ nativeVault: mocks, onePasswordVault: mocks }));
@@ -21,9 +23,9 @@ const login = { itemId: "synthetic-item", label: "Fixture", allowedHosts: ["shop
 function request(path: string, init: RequestInit = {}) {
   return new Request(`${origin}${path}`, { ...init, headers: { authorization, origin, ...init.headers } });
 }
-function liveRequest(token?: string, capability = issueContextCapability(request("/api/context-capability", { method: "POST" })).token) {
-  return request(`/api/browser-live-view?sessionId=${sessionId}`, { headers: {
-    "x-browsie-context-capability": capability, ...(token ? { "x-browsie-live-view-token": token } : {}),
+function liveRequest(eveSessionId?: string, capability = issueContextCapability(request("/api/context-capability", { method: "POST" })).token) {
+  return request(`/api/browser-live-view?sessionId=${sessionId}${eveSessionId ? `&eveSessionId=${eveSessionId}` : ""}`, { headers: {
+    "x-browsie-context-capability": capability,
   } });
 }
 beforeEach(() => {
@@ -91,19 +93,37 @@ describe("Live View session scope", () => {
     expect((await liveView(liveRequest())).status).toBe(404);
     expect(mocks.debug).not.toHaveBeenCalled();
   });
-  it("rejects a token for a different session and expired or tampered tokens", async () => {
-    const target = { eveSessionId: "synthetic-conversation", browserSessionId: sessionId };
-    const tokens = [issueBrowserHandoffToken({ ...target, browserSessionId: "foreign-session" }), issueBrowserHandoffToken(target, { now: Date.now() - 20 * 60 * 1_000 }), "invalid"];
-    for (const token of tokens) expect((await liveView(liveRequest(token))).status).toBe(404);
+  it("checks persisted task ownership before looking up a browser", async () => {
+    for (const events of [[], [browserEvent("foreign-session")], [browserEvent(sessionId), { type: "turn.cancelled" }], [browserEvent(sessionId), browserEvent("new-browser-session")]]) {
+      mocks.snapshot.mockResolvedValue({ events });
+      expect((await liveView(liveRequest("synthetic-conversation"))).status).toBe(404);
+    }
+    mocks.snapshot.mockRejectedValue(new Error("History unavailable"));
+    expect((await liveView(liveRequest("synthetic-conversation"))).status).toBe(404);
     expect(mocks.debug).not.toHaveBeenCalled();
   });
-  it("allows the scoped agent session and a session registered by Context Studio", async () => {
+  it("reopens a persisted active session after ten minutes and preserves Context Studio access", async () => {
+    const now = Date.now();
+    mocks.snapshot.mockResolvedValue({ events: [browserEvent(sessionId)] });
     mocks.debug.mockResolvedValue({ debuggerFullscreenUrl: liveUrl });
-    const token = issueBrowserHandoffToken({ eveSessionId: "synthetic-conversation", browserSessionId: sessionId });
-    expect((await liveView(liveRequest(token))).status).toBe(200);
-    expect(mocks.debug).toHaveBeenCalledExactlyOnceWith(sessionId);
+    expect((await liveView(liveRequest("synthetic-conversation"))).status).toBe(200);
+    vi.spyOn(Date, "now").mockReturnValue(now + 11 * 60_000);
+    expect((await liveView(liveRequest("synthetic-conversation"))).status).toBe(200);
+    expect(mocks.debug).toHaveBeenCalledTimes(2);
     mocks.getSession.mockReturnValue({ sessionId }); mocks.getLiveView.mockResolvedValue(liveUrl);
     expect((await liveView(liveRequest())).status).toBe(200);
-    expect(mocks.debug).toHaveBeenCalledOnce();
+    expect(mocks.debug).toHaveBeenCalledTimes(2);
+  });
+  it("ignores messages and failed tool results and rejects retired task browsers", () => {
+    for (const terminal of ["turn.cancelled", "session.failed", "session.completed"]) {
+      expect(activeBrowserSession([browserEvent(sessionId), { type: terminal } as MessageStreamEvent])).toBeUndefined();
+    }
+    const failed = browserEvent("foreign-session");
+    if (failed.type === "action.result" && failed.data.result.kind === "tool-result") failed.data.result.isError = true;
+    expect(activeBrowserSession([browserEvent(sessionId), failed])).toBe(sessionId);
+    expect(activeBrowserSession([{ type: "message.received", data: { result: browserEvent(sessionId).data } } as unknown as MessageStreamEvent])).toBeUndefined();
   });
 });
+function browserEvent(id: string): MessageStreamEvent {
+  return { type: "action.result", data: { result: { kind: "tool-result", output: { workbench: { browser: { provider: "browserbase", status: "active", sessionId: id } } } } } } as unknown as MessageStreamEvent;
+}

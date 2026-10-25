@@ -9,7 +9,6 @@ import {
 import lifecycle from "../agent/hooks/browser-lifecycle";
 import run from "../agent/tools/run";
 import snapshot from "../agent/tools/snapshot";
-import { verifyBrowserHandoffToken } from "../packages/browsie/server/handoff";
 import type { ConversationState } from "../packages/browsie/server/types";
 import {
   ContextContainer,
@@ -36,7 +35,7 @@ async function withEveContext(check: () => Promise<void>) {
 }
 
 describe("Bell's compiled Browsie workspace dependency", () => {
-  it("redacts form values and issues a scoped Live View token through Bell's actual import", () => withEveContext(async () => {
+  it("redacts form values and preserves the browser identity through Bell's actual import", () => withEveContext(async () => {
     vi.stubEnv("BROWSIE_HANDOFF_SECRET", "synthetic-shared-handoff-secret-at-least-32-bytes");
     const fill = vi.fn(async () => {});
     const page = { locator: () => ({ fill }), url: async () => "https://shop.example/", title: async () => "Fixture" };
@@ -55,9 +54,8 @@ describe("Bell's compiled Browsie workspace dependency", () => {
     expect(fill).toHaveBeenCalledWith(value);
     expect(JSON.stringify(output)).not.toContain(value);
     if (!("workbench" in output)) throw new Error("Expected one browser result.");
-    expect(verifyBrowserHandoffToken(output.workbench.browser.liveViewToken!)).toMatchObject({
-      eveSessionId: sessionId, browserSessionId: "synthetic-hosted-session",
-    });
+    expect(output.workbench.browser.sessionId).toBe("synthetic-hosted-session");
+    expect(output.workbench.browser).not.toHaveProperty("liveViewToken");
   }));
 
   it("does not recreate Bell's runtime when canceled before queued work starts", () => withEveContext(async () => {
