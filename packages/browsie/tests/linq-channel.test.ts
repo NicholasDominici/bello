@@ -23,8 +23,8 @@ describe("Linq channel", () => {
     expect(isAllowedLinqSender({ isBot: true, userId: "linq:user_123" })).toBe(false);
   });
 
-  it("accepts people when no sender allowlist is configured", () => {
-    expect(isAllowedLinqSender({ isBot: false, userId: "linq:user_123" }, undefined)).toBe(true);
+  it.each([undefined, "", " , "])("rejects people when no sender allowlist is configured: %s", allowlist => {
+    expect(isAllowedLinqSender({ isBot: false, userId: "linq:user_123" }, allowlist)).toBe(false);
   });
 
   it("uses exact sender identifiers in a trimmed allowlist", () => {

@@ -7,6 +7,7 @@ import {
   selectAgentContext,
 } from "../../server/agent-contexts.js";
 import { BrowsieBrowserSession, CaptchaHandoffError } from "../../server/browser-session.js";
+import { issueBrowserHandoffToken } from "../../server/handoff.js";
 import { addTrace } from "../../server/trace.js";
 import type { BrowserProxyLocation, ConversationState, TraceEvent } from "../../server/types.js";
 import { runWithCancellation } from "./cancellation";
@@ -116,7 +117,12 @@ export async function runBrowserOperation<T>(
   return {
     result,
     workbench: {
-      browser: { ...runtime.state.browser },
+      browser: {
+        ...runtime.state.browser,
+        ...(runtime.state.browser.status === "active" && runtime.state.browser.sessionId && process.env.BROWSIE_HANDOFF_SECRET
+          ? { liveViewToken: issueBrowserHandoffToken({ eveSessionId: sessionId, browserSessionId: runtime.state.browser.sessionId }) }
+          : {}),
+      },
       traces: runtime.state.traces.slice(traceStart),
       captcha: taskState.get().captcha,
       ...(includeScreenshot && runtime.state.screenshot

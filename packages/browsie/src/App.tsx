@@ -1258,7 +1258,10 @@ function BrowserPanel({
     fetch(`/api/browser-live-view?sessionId=${encodeURIComponent(browser.sessionId)}`, {
       cache: "no-store",
       signal: controller.signal,
-      headers: { "x-browsie-context-capability": liveViewCapability },
+      headers: {
+        "x-browsie-context-capability": liveViewCapability,
+        ...(browser.liveViewToken ? { "x-browsie-live-view-token": browser.liveViewToken } : {}),
+      },
     })
       .then(async (response) => {
         if (!response.ok) throw new Error("Live view unavailable");
@@ -1278,7 +1281,7 @@ function BrowserPanel({
       cancelled = true;
       controller.abort();
     };
-  }, [browser.provider, browser.sessionId, browser.status, directLiveUrl, liveViewCapability]);
+  }, [browser.provider, browser.sessionId, browser.status, browser.liveViewToken, directLiveUrl, liveViewCapability]);
 
   const liveUrl = directLiveUrl ?? resolvedLiveUrl;
   const emptyTitle =

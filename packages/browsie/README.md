@@ -66,6 +66,9 @@ Set secret values only in `.env`:
 OPENAI_API_KEY=<your-key>
 BROWSERBASE_API_KEY=<your-key>
 STAGEHAND_BROWSER=browserbase
+BROWSIE_STUDIO_USERNAME=operator
+BROWSIE_STUDIO_PASSWORD=<separate-random-password-at-least-32-bytes>
+BROWSIE_HANDOFF_SECRET=<separate-random-secret-at-least-32-characters>
 BROWSIE_LOG_SESSION=false
 ```
 
@@ -75,7 +78,8 @@ Then start the application:
 pnpm dev
 ```
 
-Open `http://127.0.0.1:4318`. Start a task and ask Browsie to use the web. The workbench shows the
+Generate each secret separately with `openssl rand -base64 32`. Open `http://127.0.0.1:4318` and
+sign in using the configured operator credentials. Start a task and ask Browsie to use the web. The workbench shows the
 live browser, tool activity, active skill, and Context state.
 
 For a local Chrome test, keep `STAGEHAND_BROWSER=auto` and omit `BROWSERBASE_API_KEY`. Local mode
@@ -86,10 +90,12 @@ does not provide Browserbase Contexts, Live View, proxies, or Verified Browsers.
 | Variable                   | Required     | Purpose                                                              |
 | -------------------------- | ------------ | -------------------------------------------------------------------- |
 | `OPENAI_API_KEY`           | Yes          | Runs the Eve agent model.                                            |
+| `BROWSIE_STUDIO_USERNAME` | Web app      | Single trusted operator's login name.                               |
+| `BROWSIE_STUDIO_PASSWORD` | Web app      | Operator password, at least 32 bytes. Missing configuration denies access. |
 | `BROWSERBASE_API_KEY`      | Hosted mode  | Creates Browserbase sessions and Contexts.                           |
 | `STAGEHAND_BROWSER`        | No           | `auto`, `local`, or `browserbase`.                                   |
 | `BROWSIE_MODEL`            | No           | Model name. Default: `gpt-5.6-sol`.                                  |
-| `BROWSIE_HANDOFF_SECRET`   | Handoff      | Signs short-lived Browsie handoff links. Use at least 32 characters. |
+| `BROWSIE_HANDOFF_SECRET`   | Live View    | Encrypts scoped Live View and handoff tokens. Use at least 32 characters. |
 | `BROWSIE_PUBLIC_URL`       | Handoff      | Public HTTPS origin for handoff links.                               |
 | `BROWSIE_VAULT_MASTER_KEY` | Native vault | Encrypts the local vault example.                                    |
 | `OP_SERVICE_ACCOUNT_TOKEN` | 1Password    | Gives server-side access to an allowed 1Password vault.              |
@@ -146,10 +152,16 @@ multi-tenant service.
 - Handoff links expire, but they are not single-use links.
 - Hosted session logging defaults to off. Explicitly enabling `BROWSIE_LOG_SESSION=true` blocks
   form entry and vault login; start a new session with logging off before entering private data.
+- The standalone web app and management APIs require the configured operator login. Use HTTPS
+  outside loopback. Management tokens are signed, expire after six hours, and are invalidated by
+  operator credential rotation. Agent Live View additionally requires a ten-minute token scoped
+  to that browser; knowing an unrelated Browserbase session ID does not grant access.
+- Configure `BROWSIE_LINQ_ALLOWED_USER_IDS` for trusted operators before enabling Linq; an empty
+  list accepts no senders. All configured operators share the same vaults and Contexts.
 
 Before a multi-instance or multi-user deployment, replace local files with a durable database,
-put encryption keys in KMS, isolate all records by user or tenant, add authentication and access
-control, make handoff tokens one-use, add rate limits and audit retention, and define secret
+put encryption keys in KMS, isolate all records by user or tenant, replace the single-operator
+login with per-user authorization, make handoff tokens one-use, add rate limits and audit retention, and define secret
 rotation and deletion procedures.
 
 ## Repository guide

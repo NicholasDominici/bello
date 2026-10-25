@@ -41,7 +41,7 @@ export function isAllowedLinqSender(
       .map((value) => value.trim())
       .filter(Boolean),
   );
-  return allowedUserIds.size === 0 || allowedUserIds.has(author.userId);
+  return allowedUserIds.has(author.userId);
 }
 
 export function requiredEnvironmentValue(name: string): string {

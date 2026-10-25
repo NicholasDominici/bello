@@ -1,8 +1,11 @@
+import { studioAccess } from "../../../../server/studio-auth";
 import { onePasswordVault } from "../../../../server/vault/index";
 import { safeError } from "../../../../server/vault/types";
 
 export const runtime = "nodejs";
-export async function GET() {
+export async function GET(request: Request) {
+  const denied = studioAccess(request);
+  if (denied) return denied;
   const headers = { "cache-control": "no-store" };
   try {
     const status = await onePasswordVault.status();

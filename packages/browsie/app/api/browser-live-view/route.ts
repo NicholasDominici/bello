@@ -2,6 +2,7 @@ import Browserbase from "@browserbasehq/sdk";
 
 import { requireContextCapability } from "../../../server/context-capability";
 import { getContextStudio } from "../../../server/context-studio";
+import { verifyBrowserHandoffToken } from "../../../server/handoff";
 import { toEmbeddedBrowserbaseLiveViewUrl } from "../../../src/live-view";
 
 export const runtime = "nodejs";
@@ -24,6 +25,11 @@ export async function GET(request: Request) {
 
   try {
     const contextSession = getContextStudio().getSession(sessionId);
+    if (!contextSession) {
+      const token = request.headers.get("x-browsie-live-view-token");
+      if (!token || verifyBrowserHandoffToken(token).browserSessionId !== sessionId)
+        return Response.json({ error: "The live view is not available." }, { status: 404 });
+    }
     const liveUrl = contextSession
       ? await getContextStudio().getLiveView(sessionId)
       : await liveViewForAgentSession(apiKey, sessionId);

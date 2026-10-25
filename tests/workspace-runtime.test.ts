@@ -9,6 +9,8 @@ import {
 import lifecycle from "../agent/hooks/browser-lifecycle";
 import run from "../agent/tools/run";
 import snapshot from "../agent/tools/snapshot";
+import { verifyBrowserHandoffToken } from "../packages/browsie/server/handoff";
+import type { ConversationState } from "../packages/browsie/server/types";
 import {
   ContextContainer,
   contextStorage,
@@ -34,6 +36,30 @@ async function withEveContext(check: () => Promise<void>) {
 }
 
 describe("Bell's compiled Browsie workspace dependency", () => {
+  it("redacts form values and issues a scoped Live View token through Bell's actual import", () => withEveContext(async () => {
+    vi.stubEnv("BROWSIE_HANDOFF_SECRET", "synthetic-shared-handoff-secret-at-least-32-bytes");
+    const fill = vi.fn(async () => {});
+    const page = { locator: () => ({ fill }), url: async () => "https://shop.example/", title: async () => "Fixture" };
+    await runBrowserOperation(sessionId, async browser => {
+      const internal = browser as unknown as { state: ConversationState; gateCaptcha(): Promise<void> };
+      internal.state.browser = { provider: "browserbase", status: "active", sessionId: "synthetic-hosted-session" };
+      vi.spyOn(browser, "start").mockResolvedValue();
+      vi.spyOn(browser, "close").mockResolvedValue();
+      vi.spyOn(internal, "gateCaptcha").mockResolvedValue();
+      Object.assign(browser, { browserbase: {}, sessionLogsDisabled: true, stagehand: {
+        experimentalBatch: async <T, A>(callback: (context: { page: typeof page }, args: A) => Promise<T>, args: A) => callback({ page }, args),
+      } });
+    });
+    const value = "synthetic-private-form-value";
+    const output = await run.execute({ actions: [{ action: "fill", target: "#field", value }] }, context());
+    expect(fill).toHaveBeenCalledWith(value);
+    expect(JSON.stringify(output)).not.toContain(value);
+    if (!("workbench" in output)) throw new Error("Expected one browser result.");
+    expect(verifyBrowserHandoffToken(output.workbench.browser.liveViewToken!)).toMatchObject({
+      eveSessionId: sessionId, browserSessionId: "synthetic-hosted-session",
+    });
+  }));
+
   it("does not recreate Bell's runtime when canceled before queued work starts", () => withEveContext(async () => {
     const controller = new AbortController();
     const pending = run.execute({ actions: [{ action: "goto", url: "https://example.com/" }] }, context(controller.signal));
