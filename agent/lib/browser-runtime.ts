@@ -5,11 +5,10 @@ import {
   listAgentContexts,
   promoteAgentContext,
   selectAgentContext,
-} from "../../server/agent-contexts.js";
-import { BrowsieBrowserSession, CaptchaHandoffError } from "../../server/browser-session.js";
-import { issueBrowserHandoffToken } from "../../server/handoff.js";
-import { addTrace } from "../../server/trace.js";
-import type { BrowserProxyLocation, ConversationState, TraceEvent } from "../../server/types.js";
+} from "../../server/browser/agent-contexts.js";
+import { BrowsieBrowserSession, CaptchaHandoffError } from "../../server/browser/browser-session.js";
+import { addTrace } from "../../server/browser/trace.js";
+import type { BrowserProxyLocation, ConversationState, TraceEvent } from "../../server/browser/types.js";
 import { runWithCancellation } from "./cancellation";
 import {
   applyCaptchaTransition,
@@ -117,12 +116,7 @@ export async function runBrowserOperation<T>(
   return {
     result,
     workbench: {
-      browser: {
-        ...runtime.state.browser,
-        ...(runtime.state.browser.status === "active" && runtime.state.browser.sessionId && process.env.BROWSIE_HANDOFF_SECRET
-          ? { liveViewToken: issueBrowserHandoffToken({ eveSessionId: sessionId, browserSessionId: runtime.state.browser.sessionId }) }
-          : {}),
-      },
+      browser: { ...runtime.state.browser },
       traces: runtime.state.traces.slice(traceStart),
       captcha: taskState.get().captcha,
       ...(includeScreenshot && runtime.state.screenshot

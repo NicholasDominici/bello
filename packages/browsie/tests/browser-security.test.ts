@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { BrowsieBrowserSession } from "../server/browser-session";
-import type { ConversationState } from "../server/types";
+import { BrowsieBrowserSession } from "../../../server/browser/browser-session";
+import type { ConversationState } from "../../../server/browser/types";
 
 const login = {
   allowedHosts: ["shop.example"],

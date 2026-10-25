@@ -1,7 +1,7 @@
 import { defineTool, toolOutput } from "eve/tools";
 import { z } from "zod";
 
-import { configureBrowserProxyLocation } from "../lib/browser-runtime";
+import { configureBrowserProxyLocation } from "../../../../agent/lib/browser-runtime";
 
 export default defineTool({
   description:

@@ -14,11 +14,11 @@ vi.mock("@browserbasehq/sdk", () => {
 });
 
 import Browserbase from "@browserbasehq/sdk";
-import { BrowsieBrowserSession } from "../server/browser-session";
-import type { ConversationState } from "../server/types";
-import { browserChannelEvents, closeBrowserRuntime, hasBrowserRuntime, runBrowserOperation } from "../agent/lib/browser-runtime";
-import { taskState } from "../agent/lib/task-state";
-import { ContextContainer, contextStorage } from "../node_modules/eve/dist/src/context/container.js";
+import { BrowsieBrowserSession } from "../../../server/browser/browser-session";
+import type { ConversationState } from "../../../server/browser/types";
+import { browserChannelEvents, closeBrowserRuntime, hasBrowserRuntime, runBrowserOperation } from "../../../agent/lib/browser-runtime";
+import { taskState } from "../../../agent/lib/task-state";
+import { ContextContainer, contextStorage } from "../../../node_modules/eve/dist/src/context/container.js";
 
 function fixture() {
   const state: ConversationState = {

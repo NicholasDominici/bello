@@ -1,5 +1,5 @@
 import { retrieve_spend_request } from "@stripe/link-integrations-eve/tools";
-import { runBrowserOperation } from "browsie/runtime";
+import { runBrowserOperation } from "../../../lib/browser-runtime";
 import { defineTool, type ToolContext } from "eve/tools";
 import { z } from "zod";
 import { freshLinkContext } from "../../../lib/link-auth";

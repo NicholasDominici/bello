@@ -18,7 +18,7 @@ through `OP_ACCOUNT`. From the repository root:
 ```sh
 BROWSIE_LIVE_ONEPASSWORD=1 BROWSIE_LOG_SESSION=false STAGEHAND_BROWSER=browserbase \
   node --env-file-if-exists=.env --env-file-if-exists=.env.local \
-  node_modules/vitest/vitest.mjs run --root packages/browsie tests/onepassword-login-real.test.ts
+  node_modules/vitest/vitest.mjs run packages/browsie/tests/onepassword-login-real.test.ts
 ```
 
 The test resolves the OTP after navigation, submits the dedicated test login, checks the
@@ -30,7 +30,7 @@ Without the dedicated fixture, report this check as unverified even if vault lis
 With the Browserbase environment loaded, run:
 
 ```sh
-BROWSIE_LIVE_CONTEXT=1 BROWSIE_LOG_SESSION=false STAGEHAND_BROWSER=browserbase pnpm --filter browsie test tests/context-save-real.test.ts
+BROWSIE_LIVE_CONTEXT=1 BROWSIE_LOG_SESSION=false STAGEHAND_BROWSER=browserbase pnpm exec vitest run packages/browsie/tests/context-save-real.test.ts
 ```
 
 This writes a synthetic example.com cookie, releases the writer, starts a reader with the

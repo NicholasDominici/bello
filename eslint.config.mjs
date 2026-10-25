@@ -3,6 +3,6 @@ import typescript from "eslint-config-next/typescript";
 const config = [
   ...next,
   ...typescript,
-  { ignores: [".next/**", ".eve/**", ".output/**", "next-env.d.ts", "packages/**", "vendor/**"] },
+  { ignores: ["**/.next/**", "**/.eve/**", "**/.output/**", "**/next-env.d.ts", "**/dist/**", "**/node_modules/**", "vendor/**"] },
 ];
 export default config;
