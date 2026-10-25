@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { redactText, redactValue } from "../server/redact.js";
+import { redactText, redactValue } from "../../../server/browser/redact.js";
 
 describe("trace redaction", () => {
   it("removes Browserbase and model keys", () => {

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import { assertStudioOrigin, studioAccess, studioCredentials } from "./studio-auth";
+import { assertStudioOrigin, studioAccess, studioCredentials } from "../../../server/browser/studio-auth";
 
 export const CONTEXT_CAPABILITY_HEADER = "x-browsie-context-capability";
 const TTL_MS = 6 * 60 * 60 * 1_000;

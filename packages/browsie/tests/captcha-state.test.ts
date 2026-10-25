@@ -6,8 +6,8 @@ import {
   CAPTCHA_JOURNAL_LIMIT,
   reconcileCaptchaAfterRestart,
   type DurableTaskRecord,
-} from "../agent/lib/task-state.js";
-import { parseBrowserbaseCaptchaEvent, safeCaptchaPage } from "../src/captcha.js";
+} from "../../../agent/lib/task-state.js";
+import { parseBrowserbaseCaptchaEvent, safeCaptchaPage } from "../../../lib/browser/captcha.js";
 
 const empty = (): DurableTaskRecord => ({
   version: 1,

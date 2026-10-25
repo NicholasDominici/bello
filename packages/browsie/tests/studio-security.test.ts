@@ -2,13 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { issueContextCapability, requireContextCapability } from "../server/context-capability";
 import { activeBrowserSession } from "../server/agent-live-view";
 import type { MessageStreamEvent } from "eve/client";
-import { studioAccess, studioAuth } from "../server/studio-auth";
+import { studioAccess, studioAuth } from "../../../server/browser/studio-auth";
 
 const mocks = vi.hoisted(() => ({ debug: vi.fn(), snapshot: vi.fn(), getSession: vi.fn(), getLiveView: vi.fn(), status: vi.fn(), list: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() }));
 vi.mock("eve/client", () => ({ Client: class { sessions = { attach: () => ({ snapshot: mocks.snapshot }) }; } }));
 vi.mock("@browserbasehq/sdk", () => ({ default: class { sessions = { debug: mocks.debug }; } }));
 vi.mock("../server/context-studio", () => ({ getContextStudio: () => mocks }));
-vi.mock("../server/vault/index", () => ({ nativeVault: mocks, onePasswordVault: mocks }));
+vi.mock("../../../server/browser/vault/index", () => ({ nativeVault: mocks, onePasswordVault: mocks }));
 import * as vault from "../app/api/vault/native/route";
 import { GET as onePassword } from "../app/api/vault/onepassword/route";
 import { GET as liveView } from "../app/api/browser-live-view/route";

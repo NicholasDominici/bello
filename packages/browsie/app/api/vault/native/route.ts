@@ -1,6 +1,6 @@
-import { studioAccess } from "../../../../server/studio-auth";
-import { nativeVault } from "../../../../server/vault/index";
-import { safeError, type LoginInput } from "../../../../server/vault/types";
+import { studioAccess } from "../../../../../../server/browser/studio-auth";
+import { nativeVault } from "../../../../../../server/browser/vault/index";
+import { safeError, type LoginInput } from "../../../../../../server/browser/vault/types";
 
 export const runtime = "nodejs";
 const noStore = { "cache-control": "no-store" };

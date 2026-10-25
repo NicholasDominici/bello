@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { BrowsieCancellationError, runWithCancellation } from "../agent/lib/cancellation";
+import { BrowsieCancellationError, runWithCancellation } from "../../../agent/lib/cancellation";
 
 describe("browser operation cancellation", () => {
   it("does not start queued work after cancellation cleanup", async () => {

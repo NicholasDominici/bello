@@ -5,18 +5,17 @@ import {
   closeBrowserRuntime,
   hasBrowserRuntime,
   runBrowserOperation,
-} from "browsie/runtime";
+} from "../agent/lib/browser-runtime";
 import lifecycle from "../agent/hooks/browser-lifecycle";
 import run from "../agent/tools/run";
 import snapshot from "../agent/tools/snapshot";
-import type { ConversationState } from "../packages/browsie/server/types";
+import type { ConversationState } from "../server/browser/types";
 import {
   ContextContainer,
   contextStorage,
 } from "../node_modules/eve/dist/src/context/container.js";
 
-// Use the installed Eve context container to
-// verify that Bell and the compiled package share real Eve state across imports.
+// Verify that tools and lifecycle hooks share the installed Eve context and browser runtime.
 // Only browser I/O is stubbed; no provider credentials are needed.
 
 const sessionId = "workspace-import-test";
@@ -34,7 +33,7 @@ async function withEveContext(check: () => Promise<void>) {
   });
 }
 
-describe("Bell's compiled Browsie workspace dependency", () => {
+describe("Bell's shared browser runtime", () => {
   it("redacts form values and preserves the browser identity through Bell's actual import", () => withEveContext(async () => {
     vi.stubEnv("BROWSIE_HANDOFF_SECRET", "synthetic-shared-handoff-secret-at-least-32-bytes");
     const fill = vi.fn(async () => {});

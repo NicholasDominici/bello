@@ -17,9 +17,9 @@ import {
   type ContextSessionPurpose,
   type ContextSessionView,
 } from "../src/context-studio";
-import { toEmbeddedBrowserbaseLiveViewUrl } from "../src/live-view";
-import { BrowserbaseConsoleAdapter } from "./browserbase-console";
-import { getContextMetadataStore, type ContextMetadataStore } from "./context-metadata";
+import { toEmbeddedBrowserbaseLiveViewUrl } from "../../../lib/browser/live-view";
+import { BrowserbaseConsoleAdapter } from "../../../server/browser/browserbase-console";
+import { getContextMetadataStore, type ContextMetadataStore } from "../../../server/browser/context-metadata";
 
 type RemoteSessionStatus = "PENDING" | "RUNNING" | "ERROR" | "TIMED_OUT" | "COMPLETED";
 

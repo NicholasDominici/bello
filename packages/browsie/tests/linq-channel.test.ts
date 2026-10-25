@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import linq, { isAllowedLinqSender, requiredEnvironmentValue } from "../agent/channels/linq";
-import { applyTaskEvent, type DurableTaskRecord } from "../agent/lib/task-state";
+import linq, { isAllowedLinqSender } from "../agent/channels/linq";
+import { requiredEnvironmentValue } from "../../../agent/lib/linq";
+import { applyTaskEvent, type DurableTaskRecord } from "../../../agent/lib/task-state";
 
 afterEach(() => {
   vi.unstubAllEnvs();

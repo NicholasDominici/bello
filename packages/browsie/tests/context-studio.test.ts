@@ -4,8 +4,8 @@ import path from "node:path";
 
 import { describe, expect, it, vi } from "vitest";
 
-import { consoleMessageFromCdpEvent } from "../server/browserbase-console.js";
-import { ContextMetadataStore } from "../server/context-metadata.js";
+import { consoleMessageFromCdpEvent } from "../../../server/browser/browserbase-console.js";
+import { ContextMetadataStore } from "../../../server/browser/context-metadata.js";
 import {
   browserbaseSessionOptions,
   ContextStudioService,

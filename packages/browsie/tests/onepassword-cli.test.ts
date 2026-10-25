@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { toSafeCliItem } from "../server/vault/onepassword.js";
+import { toSafeCliItem } from "../../../server/browser/vault/onepassword.js";
 
 describe("1Password CLI fallback", () => {
   it("returns safe Login metadata without secret values", () => {

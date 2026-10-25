@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { BrowsieBrowserSession } from "../server/browser-session.js";
-import type { ConversationState } from "../server/types.js";
-import { onePasswordVault } from "../server/vault/index.js";
+import { BrowsieBrowserSession } from "../../../server/browser/browser-session.js";
+import type { ConversationState } from "../../../server/browser/types.js";
+import { onePasswordVault } from "../../../server/browser/vault/index.js";
 
 const live =
   process.env.BROWSIE_LIVE_ONEPASSWORD === "1" &&

@@ -1,4 +1,4 @@
-import { studioAccess } from "./server/studio-auth";
+import { studioAccess } from "../../server/browser/studio-auth";
 
 export function proxy(request: Request) {
   return studioAccess(request);
