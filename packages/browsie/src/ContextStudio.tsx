@@ -17,7 +17,7 @@ import {
   type ContextSessionPurpose,
   type ContextSessionView,
 } from "./context-studio";
-import { toEmbeddedBrowserbaseLiveViewUrl } from "./live-view";
+import { toEmbeddedBrowserbaseLiveViewUrl } from "../../../lib/browser/live-view";
 
 export default function ContextStudio({ configured }: { configured: boolean }) {
   const [capability, setCapability] = useState<string>();

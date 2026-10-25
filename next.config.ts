@@ -5,7 +5,6 @@ const config: NextConfig = {
   agentRules: false,
   allowedDevOrigins: ["127.0.0.1", "localhost"],
   serverExternalPackages: ["@browserbasehq/sdk", "@browserbasehq/stagehand", "playwright-core", "pg"],
-  transpilePackages: ["browsie"],
   turbopack: { root: process.cwd() },
 };
 export default withEve(config);

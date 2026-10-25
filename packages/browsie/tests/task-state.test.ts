@@ -8,7 +8,7 @@ import {
   safeText,
   setTaskBrowserContext,
   type DurableTaskRecord,
-} from "../agent/lib/task-state";
+} from "../../../agent/lib/task-state";
 
 const empty = (): DurableTaskRecord => ({
   version: 1,

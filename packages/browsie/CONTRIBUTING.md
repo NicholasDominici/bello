@@ -7,7 +7,7 @@ clearer, more reliable, or easier to copy.
 
 1. Read [README.md](README.md).
 2. Read the document for the area you will change.
-3. Keep Browsie changes inside `packages/browsie`. Update Bell's consumers and workspace configuration when needed.
+3. Shared browser code belongs in Bell; keep standalone UI changes in `packages/browsie`. Test both applications.
 4. Do not commit credentials, `.env`, browser data, run traces, or customer data.
 
 For a new browser-agent capability, read
@@ -26,13 +26,10 @@ the skill is not required.
 
 ## Validation
 
-From `packages/browsie`, run:
+From the repository root, run:
 
 ```bash
-pnpm test
-pnpm typecheck
-pnpm lint
-pnpm build
+pnpm check:workspace
 ```
 
 The live tests use real Browserbase, model, Linq, or 1Password resources. Run them only when the

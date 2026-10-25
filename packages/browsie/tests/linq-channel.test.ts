@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import linq, { isAllowedLinqSender, requiredEnvironmentValue } from "../agent/channels/linq";
-import { applyTaskEvent, type DurableTaskRecord } from "../agent/lib/task-state";
+import linq, { isAllowedLinqSender } from "../agent/channels/linq";
+import { requiredEnvironmentValue } from "../../../agent/lib/linq";
+import { applyTaskEvent, type DurableTaskRecord } from "../../../agent/lib/task-state";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -23,8 +24,8 @@ describe("Linq channel", () => {
     expect(isAllowedLinqSender({ isBot: true, userId: "linq:user_123" })).toBe(false);
   });
 
-  it("accepts people when no sender allowlist is configured", () => {
-    expect(isAllowedLinqSender({ isBot: false, userId: "linq:user_123" }, undefined)).toBe(true);
+  it.each([undefined, "", " , "])("rejects people when no sender allowlist is configured: %s", allowlist => {
+    expect(isAllowedLinqSender({ isBot: false, userId: "linq:user_123" }, allowlist)).toBe(false);
   });
 
   it("uses exact sender identifiers in a trimmed allowlist", () => {

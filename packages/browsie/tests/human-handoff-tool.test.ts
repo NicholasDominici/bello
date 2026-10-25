@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import humanHandoff from "../agent/tools/human_handoff";
+import humanHandoff from "../../../agent/tools/human_handoff";
 
 const mocks = vi.hoisted(() => ({
   issueBrowserHandoffUrl: vi.fn(),
@@ -8,13 +8,13 @@ const mocks = vi.hoisted(() => ({
   getTaskState: vi.fn(),
 }));
 
-vi.mock("../server/handoff.js", () => ({
+vi.mock("../../../server/browser/handoff.js", () => ({
   issueBrowserHandoffUrl: mocks.issueBrowserHandoffUrl,
 }));
-vi.mock("../agent/lib/browser-runtime", () => ({
+vi.mock("../../../agent/lib/browser-runtime", () => ({
   saveBrowserRuntime: mocks.saveBrowserRuntime,
 }));
-vi.mock("../agent/lib/task-state", () => ({
+vi.mock("../../../agent/lib/task-state", () => ({
   taskState: { get: mocks.getTaskState },
 }));
 

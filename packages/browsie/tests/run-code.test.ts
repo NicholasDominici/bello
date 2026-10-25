@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatRunCode } from "../server/browser-session.js";
+import { formatRunCode } from "../../../server/browser/browser-session.js";
 
 describe("run activity code", () => {
   it("shows exact browser calls and hides entered values", () => {
