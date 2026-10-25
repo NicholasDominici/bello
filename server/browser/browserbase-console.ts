@@ -1,6 +1,6 @@
 import "server-only";
 
-import { captchaSignalMessage, parseBrowserbaseCaptchaEvent } from "../src/captcha";
+import { captchaSignalMessage, parseBrowserbaseCaptchaEvent } from "../../lib/browser/captcha";
 
 type Pending = {
   resolve: (value: Record<string, unknown>) => void;

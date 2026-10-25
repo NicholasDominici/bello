@@ -38,8 +38,9 @@ Web UI or Linq channel
 
 Eve owns the conversation and event history. Stagehand owns browser automation. Browserbase owns
 the remote browser, network identity, saved browser state, and Live View. Browsie keeps credentials
-behind a vault boundary. It does not put passwords, OTP values, cookies, or authorization headers
-in prompts or activity events.
+behind a vault boundary. Vault tools resolve credentials on the server; form values and sensitive
+fields are redacted from Browsie's activity traces. Never put secrets in generic `run` arguments:
+Eve records tool inputs separately from these traces. Use `vault_login` or human handoff for login.
 
 There is no second browser-control service. Eve tools import the browser runtime in the same
 process. This keeps session ownership clear and makes cancellation and recovery easier to follow.
@@ -65,15 +66,20 @@ Set secret values only in `.env`:
 OPENAI_API_KEY=<your-key>
 BROWSERBASE_API_KEY=<your-key>
 STAGEHAND_BROWSER=browserbase
+BROWSIE_STUDIO_USERNAME=operator
+BROWSIE_STUDIO_PASSWORD=<separate-random-password-at-least-32-bytes>
+BROWSIE_HANDOFF_SECRET=<separate-random-secret-at-least-32-characters>
+BROWSIE_LOG_SESSION=false
 ```
 
-Then start the application:
+Then return to the repository root (`cd ../..`) and start the application:
 
 ```bash
-pnpm dev
+pnpm dev:studio
 ```
 
-Open `http://127.0.0.1:4318`. Start a task and ask Browsie to use the web. The workbench shows the
+Generate each secret separately with `openssl rand -base64 32`. Open `http://127.0.0.1:4318` and
+sign in using the configured operator credentials. Start a task and ask Browsie to use the web. The workbench shows the
 live browser, tool activity, active skill, and Context state.
 
 For a local Chrome test, keep `STAGEHAND_BROWSER=auto` and omit `BROWSERBASE_API_KEY`. Local mode
@@ -84,10 +90,12 @@ does not provide Browserbase Contexts, Live View, proxies, or Verified Browsers.
 | Variable                   | Required     | Purpose                                                              |
 | -------------------------- | ------------ | -------------------------------------------------------------------- |
 | `OPENAI_API_KEY`           | Yes          | Runs the Eve agent model.                                            |
+| `BROWSIE_STUDIO_USERNAME` | Web app      | Single trusted operator's login name.                               |
+| `BROWSIE_STUDIO_PASSWORD` | Web app      | Operator password, at least 32 bytes. Missing configuration denies access. |
 | `BROWSERBASE_API_KEY`      | Hosted mode  | Creates Browserbase sessions and Contexts.                           |
 | `STAGEHAND_BROWSER`        | No           | `auto`, `local`, or `browserbase`.                                   |
 | `BROWSIE_MODEL`            | No           | Model name. Default: `gpt-5.6-sol`.                                  |
-| `BROWSIE_HANDOFF_SECRET`   | Handoff      | Signs short-lived Browsie handoff links. Use at least 32 characters. |
+| `BROWSIE_HANDOFF_SECRET`   | Handoff      | Encrypts scoped handoff tokens. Use at least 32 characters.              |
 | `BROWSIE_PUBLIC_URL`       | Handoff      | Public HTTPS origin for handoff links.                               |
 | `BROWSIE_VAULT_MASTER_KEY` | Native vault | Encrypts the local vault example.                                    |
 | `OP_SERVICE_ACCOUNT_TOKEN` | 1Password    | Gives server-side access to an allowed 1Password vault.              |
@@ -98,13 +106,10 @@ Read [`.env.example`](.env.example) for every option. Never commit `.env` or sec
 
 ## Test it
 
-The default tests do not call live services. From this directory, run:
+The default tests do not call live services. From the repository root, run:
 
 ```bash
-pnpm test
-pnpm typecheck
-pnpm lint
-pnpm build
+pnpm check:workspace
 ```
 
 The `*-real.test.ts` and live CAPTCHA tests need explicit service credentials. They skip when the
@@ -142,10 +147,18 @@ multi-tenant service.
 - Browser session recovery uses saved Browserbase session metadata.
 - The 1Password integration uses one server-side service account.
 - Handoff links expire, but they are not single-use links.
+- Hosted session logging defaults to off. Explicitly enabling `BROWSIE_LOG_SESSION=true` blocks
+  form entry and vault login; start a new session with logging off before entering private data.
+- The standalone web app and management APIs require the configured operator login. Use HTTPS
+  outside loopback. Management tokens are signed, expire after six hours, and are invalidated by
+  operator credential rotation. Agent Live View verifies the active browser in the authenticated task history; knowing an
+  unrelated Browserbase session ID does not grant access. Public handoff links expire after ten minutes.
+- Configure `BROWSIE_LINQ_ALLOWED_USER_IDS` for trusted operators before enabling Linq; an empty
+  list accepts no senders. All configured operators share the same vaults and Contexts.
 
 Before a multi-instance or multi-user deployment, replace local files with a durable database,
-put encryption keys in KMS, isolate all records by user or tenant, add authentication and access
-control, make handoff tokens one-use, add rate limits and audit retention, and define secret
+put encryption keys in KMS, isolate all records by user or tenant, replace the single-operator
+login with per-user authorization, make handoff tokens one-use, add rate limits and audit retention, and define secret
 rotation and deletion procedures.
 
 ## Repository guide
@@ -160,21 +173,13 @@ rotation and deletion procedures.
 
 Browsie is licensed under the MIT License. See [`LICENSE`](LICENSE).
 
-## Reuse the browser runtime
+## Shared browser implementation
 
-Bell depends on this private workspace package with `"browsie": "workspace:*"`.
-Install dependencies from the repository root with `pnpm install --frozen-lockfile`.
-Run `pnpm build:library` from this directory to rebuild the shared exports after editing them.
-Bell's development and production build commands also build these exports before starting.
-The public exports are `browsie/runtime`, `browsie/tools/*`, `browsie/hooks/*`,
-`browsie/channels/linq`, and the two handoff routes. Exports provide compiled JavaScript plus source types; consumers use the same Eve version.
-The generated `dist/shared` directory is not committed. One shared bundle keeps browser state
-consistent across all tools and hooks. These exports do not start a second agent or browser service.
+The root `agent/lib`, `agent/tools`, `server/browser`, and `lib/browser` directories own browser behavior.
+This app imports them directly and keeps its own UI and agent entrypoints. One root manifest and
+lockfile supply both applications; no package export map or generated library is needed.
 
-Re-export the browser lifecycle and task-state hooks alongside the selected tools. Every custom
-browser tool must use `runBrowserOperation` and `runCancelableBrowserWork` from `browsie/runtime`.
-A server-side integration can call `browser.withHostedPage(signal, callback)` to work with the
-existing hosted page under its operation lock. Set `BROWSIE_LOG_SESSION=false` before starting
-that session. Never return the connection URL or credential headers from the callback.
-
-The Bell-Stack project is a consumer of this interface. Browsie remains independently runnable.
+Every custom browser tool must use `runBrowserOperation` and `runCancelableBrowserWork` from
+`agent/lib/browser-runtime`. A server integration can call `browser.withHostedPage(signal, callback)`
+under the same operation lock. Keep `BROWSIE_LOG_SESSION=false` and never return a connection URL
+or credential headers from the callback. Run `pnpm dev:studio` from the repository root for this UI.

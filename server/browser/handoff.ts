@@ -2,7 +2,7 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:
 
 import Browserbase from "@browserbasehq/sdk";
 
-import { toEmbeddedBrowserbaseLiveViewUrl } from "../src/live-view";
+import { toEmbeddedBrowserbaseLiveViewUrl } from "../../lib/browser/live-view";
 
 const HANDOFF_VERSION = "v1";
 const DEFAULT_TTL_MS = 10 * 60 * 1_000;

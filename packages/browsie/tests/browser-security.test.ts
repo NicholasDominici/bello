@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { BrowsieBrowserSession } from "../server/browser-session";
-import type { ConversationState } from "../server/types";
+import { BrowsieBrowserSession } from "../../../server/browser/browser-session";
+import type { ConversationState } from "../../../server/browser/types";
 
 const login = {
   allowedHosts: ["shop.example"],
@@ -119,6 +119,43 @@ describe("vault login credential boundary", () => {
 });
 
 describe("browser navigation boundary", () => {
+  it.each(["fill", "type", "select", "press"] as const)("refuses hosted %s when session logging is enabled", async action => {
+    const { session, batch, fill } = fixture();
+    Object.assign(session, { sessionLogsDisabled: false });
+    await expect(session.run([action === "press" ? { action, key: "s" } : { action, target: "#field", value: "synthetic-private" }])).rejects.toThrow("logging");
+    expect(batch).not.toHaveBeenCalled();
+    expect(fill).not.toHaveBeenCalled();
+  });
+  it("fills the original values without retaining them in traces", async () => {
+    const { session, state, fill } = fixture();
+    const values = ["synthetic-credential-2b87e", "4242424242424242"];
+    await session.run(values.map((value, i) => ({ action: "fill", target: `#field-${i}`, value })));
+    for (const [i, value] of values.entries()) {
+      expect(fill).toHaveBeenCalledWith(`#field-${i}`, value);
+      expect(JSON.stringify(state.traces)).not.toContain(value);
+    }
+    expect(state.traces.find(trace => trace.name === "run")?.detail).toMatchObject({
+      actions: values.map((_, i) => ({ action: "fill", target: `#field-${i}`, value: "[value hidden]" })),
+    });
+  });
+
+  it("rejects operations queued behind a browser that has been closed", async () => {
+    const { session, batch } = fixture();
+    Object.assign(session, { stagehand: { experimentalBatch: batch, close: vi.fn(async () => {}) } });
+    let resume!: () => void;
+    const gate = new Promise<void>(resolve => { resume = resolve; });
+    batch.mockImplementationOnce(async () => { await gate; return { url: "https://shop.example", title: "Fixture" }; });
+    const first = session.run([{ action: "fill", target: "#first", value: "one" }]);
+    await vi.waitFor(() => expect(batch).toHaveBeenCalledOnce());
+    const second = session.run([{ action: "fill", target: "#second", value: "two" }]);
+    const rejected = expect(second).rejects.toMatchObject({ name: "AbortError" });
+    await session.close();
+    resume();
+    await first;
+    await rejected;
+    await expect(session.run([{ action: "wait", milliseconds: 1 }])).rejects.toMatchObject({ name: "AbortError" });
+    expect(batch).toHaveBeenCalledOnce();
+  });
   it.each([
     "file:///tmp/bell-synthetic-fixture",
     "javascript:alert(1)",

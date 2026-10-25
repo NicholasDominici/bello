@@ -8,7 +8,7 @@ import {
   issueBrowserHandoffUrl,
   resolveBrowserHandoffLiveViewUrl,
   verifyBrowserHandoffToken,
-} from "../server/handoff.js";
+} from "../../../server/browser/handoff.js";
 
 const secret = "test-only-handoff-secret-with-at-least-32-bytes";
 const target = {

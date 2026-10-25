@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { toEmbeddedBrowserbaseLiveViewUrl } from "../src/live-view.js";
+import { toEmbeddedBrowserbaseLiveViewUrl } from "../../../lib/browser/live-view.js";
 
 describe("Browserbase live view URLs", () => {
   it("accepts a signed debugger URL and hides the Browserbase navigation bar", () => {

@@ -1,9 +1,12 @@
-import { nativeVault } from "../../../../server/vault/index";
-import { safeError, type LoginInput } from "../../../../server/vault/types";
+import { studioAccess } from "../../../../../../server/browser/studio-auth";
+import { nativeVault } from "../../../../../../server/browser/vault/index";
+import { safeError, type LoginInput } from "../../../../../../server/browser/vault/types";
 
 export const runtime = "nodejs";
 const noStore = { "cache-control": "no-store" };
-export async function GET() {
+export async function GET(request: Request) {
+  const denied = studioAccess(request);
+  if (denied) return denied;
   try {
     return Response.json(
       { status: await nativeVault.status(), items: await nativeVault.list() },
@@ -14,6 +17,8 @@ export async function GET() {
   }
 }
 export async function POST(request: Request) {
+  const denied = studioAccess(request);
+  if (denied) return denied;
   try {
     const input = (await request.json()) as LoginInput;
     return Response.json(
@@ -25,6 +30,8 @@ export async function POST(request: Request) {
   }
 }
 export async function PUT(request: Request) {
+  const denied = studioAccess(request);
+  if (denied) return denied;
   try {
     const body = (await request.json()) as { itemId?: unknown } & LoginInput;
     if (typeof body.itemId !== "string") throw new Error("Vault item not found.");
@@ -37,6 +44,8 @@ export async function PUT(request: Request) {
   }
 }
 export async function DELETE(request: Request) {
+  const denied = studioAccess(request);
+  if (denied) return denied;
   try {
     const itemId = new URL(request.url).searchParams.get("itemId");
     if (!itemId) throw new Error("Vault item not found.");

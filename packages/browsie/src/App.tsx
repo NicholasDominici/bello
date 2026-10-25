@@ -1,7 +1,5 @@
 "use client";
 
-import Image from "next/image";
-
 import { useEveAgent } from "eve/react";
 import { Client } from "eve/client";
 import {
@@ -37,7 +35,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { isNearScrollBottom } from "./chat-scroll";
 import { buildClientContext } from "./client-context";
 import ContextStudio from "./ContextStudio";
-import { toEmbeddedBrowserbaseLiveViewUrl } from "./live-view";
+import BrowserLiveView from "./BrowserLiveView";
 import { parseTaskHistory, TASK_HISTORY_KEY, type TaskHistoryItem } from "./task-history";
 import type { AgentSettings, Bootstrap, BrowserState, TraceEvent } from "./types";
 import VaultStudio from "./VaultStudio";
@@ -486,6 +484,7 @@ export default function App({
         {view === "chat" ? (
           <ChatView
             bootstrap={bootstrap}
+            eveSessionId={agent.session?.sessionId}
             browser={browser}
             captcha={captcha}
             busy={busy}
@@ -544,6 +543,7 @@ function NavButton({
 }
 
 function ChatView({
+  eveSessionId,
   bootstrap,
   browser,
   captcha,
@@ -565,6 +565,7 @@ function ChatView({
 }: {
   bootstrap: Bootstrap;
   browser: BrowserState;
+  eveSessionId?: string;
   captcha?: CaptchaProjection;
   busy: boolean;
   pendingInput?: PendingInput;
@@ -827,6 +828,7 @@ function ChatView({
           aria-label="Browser workbench"
         >
           <BrowserDockCard
+            eveSessionId={eveSessionId}
             browser={browser}
             captcha={captcha}
             expanded={browserExpanded}
@@ -841,6 +843,7 @@ function ChatView({
 }
 
 function BrowserDockCard({
+  eveSessionId,
   browser,
   captcha,
   expanded,
@@ -849,6 +852,7 @@ function BrowserDockCard({
   traces,
 }: {
   browser: BrowserState;
+  eveSessionId?: string;
   captcha?: CaptchaProjection;
   expanded: boolean;
   latestTool?: TraceEvent;
@@ -935,7 +939,7 @@ function BrowserDockCard({
         {expanded ? (
           <div className="browser-card-content">
             {cardView === "browser" ? (
-              <BrowserPanel browser={browser} latestTool={latestTool} fullscreen={fullscreen} />
+              <BrowserPanel browser={browser} eveSessionId={eveSessionId} latestTool={latestTool} fullscreen={fullscreen} />
             ) : (
               <EventsPanel traces={traces} />
             )}
@@ -1195,105 +1199,15 @@ function MessageContent({ text }: { text: string }) {
 
 function BrowserPanel({
   browser,
+  eveSessionId,
   fullscreen,
   latestTool,
 }: {
   browser: BrowserState;
+  eveSessionId?: string;
   fullscreen: boolean;
   latestTool?: TraceEvent;
 }) {
-  const directLiveUrl = toEmbeddedBrowserbaseLiveViewUrl(browser.liveUrl);
-  const [resolvedLiveUrl, setResolvedLiveUrl] = useState<string>();
-  const [liveViewStatus, setLiveViewStatus] = useState<"idle" | "loading" | "ready" | "error">(
-    directLiveUrl ? "ready" : "idle",
-  );
-  const [liveViewCapability, setLiveViewCapability] = useState<string>();
-
-  useEffect(() => {
-    if (browser.provider !== "browserbase") return;
-    const controller = new AbortController();
-    fetch("/api/context-capability", {
-      method: "POST",
-      cache: "no-store",
-      signal: controller.signal,
-    })
-      .then((response) =>
-        response.ok ? (response.json() as Promise<{ token: string }>) : Promise.reject(),
-      )
-      .then(({ token }) => setLiveViewCapability(token))
-      .catch(() => undefined);
-    return () => controller.abort();
-  }, [browser.provider]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const updateState = (status: "idle" | "loading" | "ready", url?: string) => {
-      queueMicrotask(() => {
-        if (cancelled) return;
-        setResolvedLiveUrl(url);
-        setLiveViewStatus(status);
-      });
-    };
-
-    if (directLiveUrl) {
-      updateState("ready");
-      return () => {
-        cancelled = true;
-      };
-    }
-    if (
-      browser.provider !== "browserbase" ||
-      browser.status !== "active" ||
-      !browser.sessionId ||
-      !liveViewCapability
-    ) {
-      updateState("idle");
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    const controller = new AbortController();
-    updateState("loading");
-    fetch(`/api/browser-live-view?sessionId=${encodeURIComponent(browser.sessionId)}`, {
-      cache: "no-store",
-      signal: controller.signal,
-      headers: { "x-browsie-context-capability": liveViewCapability },
-    })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Live view unavailable");
-        return response.json() as Promise<{ liveUrl?: string }>;
-      })
-      .then(({ liveUrl }) => {
-        const safeLiveUrl = toEmbeddedBrowserbaseLiveViewUrl(liveUrl);
-        if (!safeLiveUrl) throw new Error("Invalid live view URL");
-        setResolvedLiveUrl(safeLiveUrl);
-        setLiveViewStatus("ready");
-      })
-      .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        setLiveViewStatus("error");
-      });
-    return () => {
-      cancelled = true;
-      controller.abort();
-    };
-  }, [browser.provider, browser.sessionId, browser.status, directLiveUrl, liveViewCapability]);
-
-  const liveUrl = directLiveUrl ?? resolvedLiveUrl;
-  const emptyTitle =
-    liveViewStatus === "loading"
-      ? "Connecting live view"
-      : liveViewStatus === "error"
-        ? "Live view unavailable"
-        : "No page open";
-  const emptyDetail =
-    liveViewStatus === "loading"
-      ? "Waiting for Browserbase."
-      : liveViewStatus === "error"
-        ? "Start a new task to open another session."
-        : "Run a browser task to see the page.";
-
   return (
     <div className={`browser-panel ${fullscreen ? "is-fullscreen" : ""}`}>
       <div className="browser-chrome">
@@ -1303,27 +1217,7 @@ function BrowserPanel({
         <div>{safeHost(browser.url)}</div>
       </div>
       <div className="browser-viewport">
-        {liveUrl ? (
-          <iframe
-            src={liveUrl}
-            title="Live Browserbase session"
-            allow="clipboard-read; clipboard-write"
-          />
-        ) : browser.screenshotDataUrl ? (
-          <Image
-            src={browser.screenshotDataUrl}
-            alt="Current browser page"
-            fill
-            unoptimized
-            sizes="100vw"
-          />
-        ) : (
-          <div className="empty-browser">
-            <Globe2 size={32} />
-            <strong>{emptyTitle}</strong>
-            <span>{emptyDetail}</span>
-          </div>
-        )}
+        <BrowserLiveView browser={browser} eveSessionId={eveSessionId} />
       </div>
       <div className="browser-meta">
         <span>
