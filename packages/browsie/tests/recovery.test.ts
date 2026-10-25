@@ -4,7 +4,7 @@ import {
   assessSnapshot,
   browserbaseLaunchOptions,
   browserProvider,
-} from "../server/browser-session.js";
+} from "../../../server/browser/browser-session.js";
 
 describe("browser recovery", () => {
   afterEach(() => {

@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
-import channel from "../agent/channels/eve";
+import channel from "../../../agent/channels/eve";
 
 const password = "synthetic-operator-password-at-least-32-bytes";
 const authorization = `Basic ${Buffer.from(`operator:${password}`).toString("base64")}`;

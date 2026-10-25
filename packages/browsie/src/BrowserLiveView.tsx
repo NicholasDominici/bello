@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Globe2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { toEmbeddedBrowserbaseLiveViewUrl } from "./live-view";
+import { toEmbeddedBrowserbaseLiveViewUrl } from "../../../lib/browser/live-view";
 import type { BrowserState } from "./types";
 
 type View = { sessionKey: string; url: string } | { sessionKey: string; error: true };

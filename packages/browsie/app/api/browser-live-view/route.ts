@@ -3,7 +3,7 @@ import Browserbase from "@browserbasehq/sdk";
 import { requireContextCapability } from "../../../server/context-capability";
 import { getContextStudio } from "../../../server/context-studio";
 import { taskOwnsBrowser } from "../../../server/agent-live-view";
-import { toEmbeddedBrowserbaseLiveViewUrl } from "../../../src/live-view";
+import { toEmbeddedBrowserbaseLiveViewUrl } from "../../../../../lib/browser/live-view";
 
 export const runtime = "nodejs";
 

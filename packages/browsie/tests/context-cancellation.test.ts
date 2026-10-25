@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ create: vi.fn(), draft: vi.fn(), promote: vi.fn() }));
-vi.mock("../server/agent-contexts.js", () => ({
+vi.mock("../../../server/browser/agent-contexts.js", () => ({
   createAgentContext: mocks.create, isDraftAgentContext: mocks.draft, promoteAgentContext: mocks.promote,
   ensureAgentContext: vi.fn(), listAgentContexts: vi.fn(), selectAgentContext: vi.fn(),
 }));
-import { BrowsieBrowserSession } from "../server/browser-session";
-import { createBrowserContext, closeBrowserRuntime, runBrowserOperation, runCancelableBrowserWork, saveBrowserContext } from "../agent/lib/browser-runtime";
-import { taskState } from "../agent/lib/task-state";
-import { ContextContainer, contextStorage } from "../node_modules/eve/dist/src/context/container.js";
+import { BrowsieBrowserSession } from "../../../server/browser/browser-session";
+import { createBrowserContext, closeBrowserRuntime, runBrowserOperation, runCancelableBrowserWork, saveBrowserContext } from "../../../agent/lib/browser-runtime";
+import { taskState } from "../../../agent/lib/task-state";
+import { ContextContainer, contextStorage } from "../../../node_modules/eve/dist/src/context/container.js";
 
 afterEach(() => { vi.restoreAllMocks(); vi.resetAllMocks(); vi.useRealTimers(); });
 describe("Context cancellation", () => {

@@ -5,10 +5,10 @@ import {
   listAgentContexts,
   promoteAgentContext,
   selectAgentContext,
-} from "../../server/agent-contexts.js";
-import { BrowsieBrowserSession, CaptchaHandoffError } from "../../server/browser-session.js";
-import { addTrace } from "../../server/trace.js";
-import type { BrowserProxyLocation, ConversationState, TraceEvent } from "../../server/types.js";
+} from "../../server/browser/agent-contexts.js";
+import { BrowsieBrowserSession, CaptchaHandoffError } from "../../server/browser/browser-session.js";
+import { addTrace } from "../../server/browser/trace.js";
+import type { BrowserProxyLocation, ConversationState, TraceEvent } from "../../server/browser/types.js";
 import { runWithCancellation } from "./cancellation";
 import {
   applyCaptchaTransition,

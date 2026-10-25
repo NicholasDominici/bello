@@ -1,17 +1,6 @@
-import { defaultLinqAuth, linqChannel, type LinqChannelConfig } from "eve/channels/linq";
+import { defaultLinqAuth, linqChannel } from "eve/channels/linq";
 
-import { browserChannelEvents } from "../lib/browser-runtime";
-
-export const linqBrowserEvents: NonNullable<LinqChannelConfig["events"]> = {
-  ...browserChannelEvents,
-  async "session.failed"(event, channel) {
-    try {
-      await browserChannelEvents["session.failed"](event);
-    } finally {
-      await channel.thread?.post("This session could not recover from an error. Start a new conversation to continue.");
-    }
-  },
-};
+import { linqBrowserEvents, requiredEnvironmentValue } from "../../../../agent/lib/linq";
 
 export default linqChannel({
   events: linqBrowserEvents,
@@ -42,10 +31,4 @@ export function isAllowedLinqSender(
       .filter(Boolean),
   );
   return allowedUserIds.has(author.userId);
-}
-
-export function requiredEnvironmentValue(name: string): string {
-  const value = process.env[name]?.trim();
-  if (!value) throw new Error(`${name} is required for the Linq channel.`);
-  return value;
 }
