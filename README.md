@@ -90,3 +90,8 @@ default HTTP channel rejects unauthenticated production traffic. The shared vaul
 uses local files and is scoped to a single demo operator. See
 [`packages/browsie/README.md`](packages/browsie/README.md) for runtime
 settings and [the vault guide](packages/browsie/docs/vault-and-otp.md) for the credential boundary.
+
+## License
+
+Distributed under the cookbook's MIT license. No proprietary fonts, deployment assets, or captured
+runtime data are included.
