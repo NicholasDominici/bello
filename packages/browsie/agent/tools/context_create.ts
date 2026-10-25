@@ -11,7 +11,7 @@ export default defineTool({
   }),
   async execute({ name }, ctx) {
     return runCancelableBrowserWork(ctx.session.id, ctx.abortSignal, () =>
-      createBrowserContext(ctx.session.id, name),
+      createBrowserContext(ctx.session.id, name, ctx.abortSignal),
     );
   },
   toModelOutput(output) {

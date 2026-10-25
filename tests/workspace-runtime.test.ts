@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   browserChannelEvents,
@@ -21,6 +21,7 @@ import {
 const sessionId = "workspace-import-test";
 const context = (signal = new AbortController().signal) =>
   ({ session: { id: sessionId }, abortSignal: signal }) as never;
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs(); });
 
 async function withEveContext(check: () => Promise<void>) {
   await contextStorage.run(new ContextContainer(), async () => {
@@ -33,6 +34,13 @@ async function withEveContext(check: () => Promise<void>) {
 }
 
 describe("Bell's compiled Browsie workspace dependency", () => {
+  it("does not recreate Bell's runtime when canceled before queued work starts", () => withEveContext(async () => {
+    const controller = new AbortController();
+    const pending = run.execute({ actions: [{ action: "goto", url: "https://example.com/" }] }, context(controller.signal));
+    controller.abort();
+    await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+    expect(hasBrowserRuntime(sessionId)).toBe(false);
+  }));
   it("shares one runtime across Bell's tool and lifecycle imports", () => withEveContext(async () => {
     const result = { completed: 1, url: "https://example.com/" };
     const runBrowser = vi.fn().mockResolvedValue(result);

@@ -28,6 +28,7 @@ interface BrowserRuntime {
   browser: BrowsieBrowserSession;
   state: ConversationState;
   idleTimer?: ReturnType<typeof setTimeout>;
+  closing?: Promise<void>;
 }
 
 export interface BrowserToolOutput<T> {
@@ -161,18 +162,19 @@ export async function closeBrowserRuntime(sessionId: string): Promise<void> {
     (taskState.get().browser.sessionId ? getRuntime(sessionId) : undefined);
   if (runtime) {
     if (runtime.idleTimer) clearTimeout(runtime.idleTimer);
-    await runtime.browser.close();
-    runtimes.delete(sessionId);
-    taskState.update((current) =>
-      closeTaskBrowser(
-        updateTaskBrowser(
-          current,
-          runtime.state.browser,
-          runtime.state.traces.map((trace) => trace.id),
+    runtime.closing ??= runtime.browser.close().then(() => {
+      runtimes.delete(sessionId);
+      taskState.update((current) =>
+        closeTaskBrowser(
+          updateTaskBrowser(
+            current,
+            runtime.state.browser,
+            runtime.state.traces.map((trace) => trace.id),
+          ),
         ),
-      ),
-    );
-    return;
+      );
+    }).finally(() => { runtime.closing = undefined; });
+    return runtime.closing;
   }
   taskState.update(closeTaskBrowser);
 }
@@ -196,18 +198,22 @@ export async function listBrowserContexts() {
 export async function createBrowserContext(
   sessionId: string,
   name: string,
+  signal?: AbortSignal,
 ): Promise<{
   id: string;
   name: string;
   selected: true;
   migratedCookieCount: number;
 }> {
+  signal?.throwIfAborted();
   const durable = taskState.get();
   const runtime =
     runtimes.get(sessionId) ?? (durable.browser.sessionId ? getRuntime(sessionId) : undefined);
   const currentContextId = durable.browser.contextId;
   if (currentContextId && (await isDraftAgentContext(currentContextId, sessionId))) {
+    signal?.throwIfAborted();
     const context = await promoteAgentContext(currentContextId, name);
+    signal?.throwIfAborted();
     taskState.update((current) => recordTaskBrowserContext(current, context.id, "saved"));
     if (runtime) runtime.state.browser.contextStatus = "saved";
     return {
@@ -220,11 +226,16 @@ export async function createBrowserContext(
   const hasExistingBrowser = Boolean(
     runtime?.browser.hasStarted() || runtime?.state.browser.sessionId,
   );
+  signal?.throwIfAborted();
   if (hasExistingBrowser) await runtime!.browser.start();
+  signal?.throwIfAborted();
   const cookies = hasExistingBrowser ? await runtime!.browser.exportCookies() : [];
+  signal?.throwIfAborted();
   const url = runtime?.state.browser.url;
   const context = await createAgentContext(name);
+  signal?.throwIfAborted();
   if (hasExistingBrowser) await runtime!.browser.close();
+  signal?.throwIfAborted();
   taskState.update((current) => setTaskBrowserContext(current, context.id));
 
   if (runtime) {
@@ -279,29 +290,35 @@ export async function selectBrowserContext(
 export async function saveBrowserContext(
   sessionId: string,
   name?: string,
+  signal?: AbortSignal,
 ): Promise<{
   id: string;
   name: string;
   status: "saved";
   migratedCookieCount: number;
 }> {
+  signal?.throwIfAborted();
   let contextId = taskState.get().browser.contextId;
   let migratedCookieCount = 0;
   if (!contextId) {
     const created = await createBrowserContext(
       sessionId,
       name?.trim() || `Browsie ${new Date().toISOString().slice(0, 10)}`,
+      signal,
     );
     contextId = created.id;
     migratedCookieCount = created.migratedCookieCount;
   }
 
   const draft = await isDraftAgentContext(contextId, sessionId);
+  signal?.throwIfAborted();
   const contextName = name?.trim() || (draft ? defaultContextName(taskState.get()) : undefined);
   await saveBrowserRuntime(sessionId);
   await closeBrowserRuntime(sessionId);
   await new Promise((resolve) => setTimeout(resolve, 5_000));
+  signal?.throwIfAborted();
   const context = await promoteAgentContext(contextId, contextName);
+  signal?.throwIfAborted();
   taskState.update((current) => setTaskBrowserContext(current, contextId, "closed", "saved"));
   return {
     id: context.id,
@@ -402,11 +419,13 @@ function defaultContextName(record: { title: string }): string {
 
 function scheduleIdleClose(sessionId: string, runtime: BrowserRuntime): void {
   if (runtime.idleTimer) clearTimeout(runtime.idleTimer);
+  if (runtime.closing || runtimes.get(sessionId) !== runtime) return;
   const configured = Number(process.env.BROWSIE_BROWSER_IDLE_MS ?? DEFAULT_IDLE_TIMEOUT_MS);
   const timeoutMs =
     Number.isFinite(configured) && configured > 0 ? configured : DEFAULT_IDLE_TIMEOUT_MS;
   runtime.idleTimer = setTimeout(() => {
-    void closeBrowserRuntime(sessionId).catch(() => undefined);
+    if (runtimes.get(sessionId) === runtime)
+      void closeBrowserRuntime(sessionId).catch(() => undefined);
   }, timeoutMs);
   runtime.idleTimer.unref?.();
 }

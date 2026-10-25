@@ -139,6 +139,23 @@ describe("browser navigation boundary", () => {
     });
   });
 
+  it("rejects operations queued behind a browser that has been closed", async () => {
+    const { session, batch } = fixture();
+    Object.assign(session, { stagehand: { experimentalBatch: batch, close: vi.fn(async () => {}) } });
+    let resume!: () => void;
+    const gate = new Promise<void>(resolve => { resume = resolve; });
+    batch.mockImplementationOnce(async () => { await gate; return { url: "https://shop.example", title: "Fixture" }; });
+    const first = session.run([{ action: "fill", target: "#first", value: "one" }]);
+    await vi.waitFor(() => expect(batch).toHaveBeenCalledOnce());
+    const second = session.run([{ action: "fill", target: "#second", value: "two" }]);
+    const rejected = expect(second).rejects.toMatchObject({ name: "AbortError" });
+    await session.close();
+    resume();
+    await first;
+    await rejected;
+    await expect(session.run([{ action: "wait", milliseconds: 1 }])).rejects.toMatchObject({ name: "AbortError" });
+    expect(batch).toHaveBeenCalledOnce();
+  });
   it.each([
     "file:///tmp/bell-synthetic-fixture",
     "javascript:alert(1)",

@@ -555,6 +555,10 @@ export class BrowsieBrowserSession {
     const previous = this.operationTail;
     this.operationTail = previous.then(() => gate);
     await previous;
+    if (this.closeRequested) {
+      release();
+      throw new DOMException("The browser session was closed.", "AbortError");
+    }
     return release;
   }
 

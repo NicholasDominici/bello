@@ -16,7 +16,7 @@ vi.mock("@browserbasehq/sdk", () => {
 import Browserbase from "@browserbasehq/sdk";
 import { BrowsieBrowserSession } from "../server/browser-session";
 import type { ConversationState } from "../server/types";
-import { browserChannelEvents, closeBrowserRuntime, hasBrowserRuntime } from "../agent/lib/browser-runtime";
+import { browserChannelEvents, closeBrowserRuntime, hasBrowserRuntime, runBrowserOperation } from "../agent/lib/browser-runtime";
 import { taskState } from "../agent/lib/task-state";
 import { ContextContainer, contextStorage } from "../node_modules/eve/dist/src/context/container.js";
 
@@ -63,6 +63,20 @@ describe("hosted browser retirement", () => {
 });
 
 describe("terminal cleanup in a fresh Eve worker", () => {
+  it("shares one pending cleanup across overlapping cancellation callbacks", () =>
+    contextStorage.run(new ContextContainer(), async () => {
+      const id = "overlapping-cleanup";
+      let finish!: () => void;
+      const gate = new Promise<void>(resolve => { finish = resolve; });
+      const close = vi.fn(() => gate);
+      await runBrowserOperation(id, async browser => { vi.spyOn(browser, "close").mockImplementation(close); });
+      const first = closeBrowserRuntime(id), second = closeBrowserRuntime(id);
+      expect(close).toHaveBeenCalledOnce();
+      expect(hasBrowserRuntime(id)).toBe(true);
+      finish();
+      await Promise.all([first, second]);
+      expect(hasBrowserRuntime(id)).toBe(false);
+    }));
   it.each(["session.completed", "session.failed"] as const)(
     "%s recovers the persisted browser and retains it until release succeeds", (event) =>
     contextStorage.run(new ContextContainer(), async () => {
