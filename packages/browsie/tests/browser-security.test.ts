@@ -119,6 +119,26 @@ describe("vault login credential boundary", () => {
 });
 
 describe("browser navigation boundary", () => {
+  it.each(["fill", "type", "select", "press"] as const)("refuses hosted %s when session logging is enabled", async action => {
+    const { session, batch, fill } = fixture();
+    Object.assign(session, { sessionLogsDisabled: false });
+    await expect(session.run([action === "press" ? { action, key: "s" } : { action, target: "#field", value: "synthetic-private" }])).rejects.toThrow("logging");
+    expect(batch).not.toHaveBeenCalled();
+    expect(fill).not.toHaveBeenCalled();
+  });
+  it("fills the original values without retaining them in traces", async () => {
+    const { session, state, fill } = fixture();
+    const values = ["synthetic-credential-2b87e", "4242424242424242"];
+    await session.run(values.map((value, i) => ({ action: "fill", target: `#field-${i}`, value })));
+    for (const [i, value] of values.entries()) {
+      expect(fill).toHaveBeenCalledWith(`#field-${i}`, value);
+      expect(JSON.stringify(state.traces)).not.toContain(value);
+    }
+    expect(state.traces.find(trace => trace.name === "run")?.detail).toMatchObject({
+      actions: values.map((_, i) => ({ action: "fill", target: `#field-${i}`, value: "[value hidden]" })),
+    });
+  });
+
   it.each([
     "file:///tmp/bell-synthetic-fixture",
     "javascript:alert(1)",

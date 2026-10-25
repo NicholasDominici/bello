@@ -9,6 +9,7 @@ describe("run activity code", () => {
       { action: "fill", target: "#email", value: "person@example.com" },
       { action: "fill", target: "#password", value: "hunter2" },
       { action: "click", target: "button[type=submit]" },
+      { action: "press", key: "synthetic-key-input" },
     ]);
 
     expect(code).toContain("await page.goto");
@@ -17,5 +18,6 @@ describe("run activity code", () => {
     expect(code).not.toContain("person@example.com");
     expect(code).not.toContain("hunter2");
     expect(code).not.toContain("token=secret");
+    expect(code).not.toContain("synthetic-key-input");
   });
 });

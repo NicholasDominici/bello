@@ -270,6 +270,8 @@ export class BrowsieBrowserSession {
     const release = await this.acquireOperation();
     try {
       await this.start();
+      if (this.browserbase && !this.sessionLogsDisabled && actions.some(action => "value" in action || action.action === "press"))
+        throw new Error("Hosted form entry requires session logging to be disabled.");
       await this.gateCaptcha();
       const started = performance.now();
       const resolvedActions = actions.map((item) =>
@@ -557,7 +559,7 @@ export class BrowsieBrowserSession {
   }
 
   private async startBrowserbase(apiKey: string): Promise<void> {
-    this.sessionLogsDisabled = process.env.BROWSIE_LOG_SESSION === "false";
+    this.sessionLogsDisabled = process.env.BROWSIE_LOG_SESSION !== "true";
     this.browserbase = new Browserbase({ apiKey });
     const persistedSessionId = this.loadPersistedSessionId();
 
@@ -835,7 +837,7 @@ export function formatRunCode(actions: RunAction[]): string {
         case "press":
           return [
             ...(item.target ? [`await page.locator(${JSON.stringify(item.target)}).click();`] : []),
-            `await page.keyPress(${JSON.stringify(item.key)});`,
+            'await page.keyPress("[key hidden]");',
           ];
         case "select":
           return `await page.locator(${JSON.stringify(item.target)}).selectOption("[value hidden]");`;
@@ -897,14 +899,14 @@ export function browserbaseLaunchOptions(
     keepAlive: true,
     browserSettings: {
       verified: true,
-      logSession: process.env.BROWSIE_LOG_SESSION !== "false",
+      logSession: process.env.BROWSIE_LOG_SESSION === "true",
       solveCaptchas: true,
       ...(contextId ? { context: { id: contextId, persist: true } } : {}),
     },
     userMetadata: {
       product: "browsie",
       transport: "stagehand-v4-eve",
-      networkLogging: String(process.env.BROWSIE_LOG_SESSION !== "false"),
+      networkLogging: String(process.env.BROWSIE_LOG_SESSION === "true"),
     },
   };
 }

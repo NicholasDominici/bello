@@ -38,8 +38,9 @@ Web UI or Linq channel
 
 Eve owns the conversation and event history. Stagehand owns browser automation. Browserbase owns
 the remote browser, network identity, saved browser state, and Live View. Browsie keeps credentials
-behind a vault boundary. It does not put passwords, OTP values, cookies, or authorization headers
-in prompts or activity events.
+behind a vault boundary. Vault tools resolve credentials on the server; form values and sensitive
+fields are redacted from Browsie's activity traces. Never put secrets in generic `run` arguments:
+Eve records tool inputs separately from these traces. Use `vault_login` or human handoff for login.
 
 There is no second browser-control service. Eve tools import the browser runtime in the same
 process. This keeps session ownership clear and makes cancellation and recovery easier to follow.
@@ -65,6 +66,7 @@ Set secret values only in `.env`:
 OPENAI_API_KEY=<your-key>
 BROWSERBASE_API_KEY=<your-key>
 STAGEHAND_BROWSER=browserbase
+BROWSIE_LOG_SESSION=false
 ```
 
 Then start the application:
@@ -142,6 +144,8 @@ multi-tenant service.
 - Browser session recovery uses saved Browserbase session metadata.
 - The 1Password integration uses one server-side service account.
 - Handoff links expire, but they are not single-use links.
+- Hosted session logging defaults to off. Explicitly enabling `BROWSIE_LOG_SESSION=true` blocks
+  form entry and vault login; start a new session with logging off before entering private data.
 
 Before a multi-instance or multi-user deployment, replace local files with a durable database,
 put encryption keys in KMS, isolate all records by user or tenant, add authentication and access

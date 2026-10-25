@@ -75,8 +75,8 @@ describe("shared hosted-page integration boundary", () => {
       session.withHostedPage(new AbortController().signal, async () => "next"),
     ).resolves.toBe("next");
   });
-  it("explicitly disables hosted network recording when requested", () => {
-    vi.stubEnv("BROWSIE_LOG_SESSION", "false");
+  it.each([undefined, "false"])("disables hosted recording by default or when requested: %s", value => {
+    vi.stubEnv("BROWSIE_LOG_SESSION", value);
     const options = browserbaseLaunchOptions("test-key");
     expect(options.browserSettings.logSession).toBe(false);
     expect(options.userMetadata.networkLogging).toBe("false");
