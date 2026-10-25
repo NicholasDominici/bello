@@ -1,3 +1,44 @@
+/* Licensed brand fonts are served from private Blob storage by app/brand-fonts; they are not in the repo. */
+@font-face {
+  font-family: "Plain";
+  src: url("/brand-fonts/plain-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Plain";
+  src: url("/brand-fonts/plain-medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "GT Planar";
+  src: url("/brand-fonts/gt-planar-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "GT Planar";
+  src: url("/brand-fonts/gt-planar-medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "GT Standard Mono";
+  src: url("/brand-fonts/gt-standard-mono-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   color-scheme: light;
   --brand: #ff4500;

@@ -28,6 +28,7 @@
     "@ai-sdk/openai": "4.0.46",
     "@browserbasehq/sdk": "2.18.0",
     "@browserbasehq/stagehand": "4.3.0",
+    "@vercel/blob": "^2.8.2",
     "ai": "7.0.137",
     "browsie": "workspace:*",
     "eve": "0.79.1",

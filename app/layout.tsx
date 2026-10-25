@@ -2,10 +2,6 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./style.css";
 
-const brandFontsCss = process.env.BELL_BRAND_FONTS_CSS_URL?.startsWith("https://")
-  ? process.env.BELL_BRAND_FONTS_CSS_URL
-  : undefined;
-
 export const metadata: Metadata = {
   title: "Bell | The stack for building personal assistant agents",
   description:
@@ -21,12 +17,6 @@ export const viewport: Viewport = {
 export default function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      {brandFontsCss ? (
-        <head>
-          {/* Licensed brand fonts are hosted privately and never committed; see .env.example. */}
-          <link rel="stylesheet" href={brandFontsCss} crossOrigin="anonymous" />
-        </head>
-      ) : null}
       <body>{children}</body>
     </html>
   );
