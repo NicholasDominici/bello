@@ -9,7 +9,7 @@ import {
   type Page,
 } from "@browserbasehq/stagehand";
 
-import { parseBrowserbaseCaptchaEvent, safeCaptchaPage, type CaptchaSignal } from "../src/captcha";
+import { parseBrowserbaseCaptchaEvent, safeCaptchaPage, type CaptchaSignal } from "../../lib/browser/captcha";
 import { addTrace } from "./trace.js";
 import type { BrowserProxyLocation, BrowserState, ConversationState, RunAction } from "./types.js";
 
@@ -555,6 +555,10 @@ export class BrowsieBrowserSession {
     const previous = this.operationTail;
     this.operationTail = previous.then(() => gate);
     await previous;
+    if (this.closeRequested) {
+      release();
+      throw new DOMException("The browser session was closed.", "AbortError");
+    }
     return release;
   }
 

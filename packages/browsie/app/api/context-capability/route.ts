@@ -10,7 +10,6 @@ export async function POST(request: Request) {
       {
         headers: {
           "cache-control": "no-store",
-          "set-cookie": capability.cookie,
         },
       },
     );

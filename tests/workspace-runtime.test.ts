@@ -1,26 +1,27 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   browserChannelEvents,
   closeBrowserRuntime,
   hasBrowserRuntime,
   runBrowserOperation,
-} from "browsie/runtime";
+} from "../agent/lib/browser-runtime";
 import lifecycle from "../agent/hooks/browser-lifecycle";
 import run from "../agent/tools/run";
 import snapshot from "../agent/tools/snapshot";
+import type { ConversationState } from "../server/browser/types";
 import {
   ContextContainer,
   contextStorage,
 } from "../node_modules/eve/dist/src/context/container.js";
 
-// Use the installed Eve context container to
-// verify that Bell and the compiled package share real Eve state across imports.
+// Verify that tools and lifecycle hooks share the installed Eve context and browser runtime.
 // Only browser I/O is stubbed; no provider credentials are needed.
 
 const sessionId = "workspace-import-test";
 const context = (signal = new AbortController().signal) =>
   ({ session: { id: sessionId }, abortSignal: signal }) as never;
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs(); });
 
 async function withEveContext(check: () => Promise<void>) {
   await contextStorage.run(new ContextContainer(), async () => {
@@ -32,7 +33,37 @@ async function withEveContext(check: () => Promise<void>) {
   });
 }
 
-describe("Bell's compiled Browsie workspace dependency", () => {
+describe("Bell's shared browser runtime", () => {
+  it("redacts form values and preserves the browser identity through Bell's actual import", () => withEveContext(async () => {
+    vi.stubEnv("BROWSIE_HANDOFF_SECRET", "synthetic-shared-handoff-secret-at-least-32-bytes");
+    const fill = vi.fn(async () => {});
+    const page = { locator: () => ({ fill }), url: async () => "https://shop.example/", title: async () => "Fixture" };
+    await runBrowserOperation(sessionId, async browser => {
+      const internal = browser as unknown as { state: ConversationState; gateCaptcha(): Promise<void> };
+      internal.state.browser = { provider: "browserbase", status: "active", sessionId: "synthetic-hosted-session" };
+      vi.spyOn(browser, "start").mockResolvedValue();
+      vi.spyOn(browser, "close").mockResolvedValue();
+      vi.spyOn(internal, "gateCaptcha").mockResolvedValue();
+      Object.assign(browser, { browserbase: {}, sessionLogsDisabled: true, stagehand: {
+        experimentalBatch: async <T, A>(callback: (context: { page: typeof page }, args: A) => Promise<T>, args: A) => callback({ page }, args),
+      } });
+    });
+    const value = "synthetic-private-form-value";
+    const output = await run.execute({ actions: [{ action: "fill", target: "#field", value }] }, context());
+    expect(fill).toHaveBeenCalledWith(value);
+    expect(JSON.stringify(output)).not.toContain(value);
+    if (!("workbench" in output)) throw new Error("Expected one browser result.");
+    expect(output.workbench.browser.sessionId).toBe("synthetic-hosted-session");
+    expect(output.workbench.browser).not.toHaveProperty("liveViewToken");
+  }));
+
+  it("does not recreate Bell's runtime when canceled before queued work starts", () => withEveContext(async () => {
+    const controller = new AbortController();
+    const pending = run.execute({ actions: [{ action: "goto", url: "https://example.com/" }] }, context(controller.signal));
+    controller.abort();
+    await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+    expect(hasBrowserRuntime(sessionId)).toBe(false);
+  }));
   it("shares one runtime across Bell's tool and lifecycle imports", () => withEveContext(async () => {
     const result = { completed: 1, url: "https://example.com/" };
     const runBrowser = vi.fn().mockResolvedValue(result);

@@ -1,4 +1,4 @@
-import { linqBrowserEvents, requiredEnvironmentValue } from "browsie/channels/linq";
+import { linqBrowserEvents, requiredEnvironmentValue } from "../lib/linq";
 import { defaultLinqAuth, linqChannel, type LinqChannelConfig } from "eve/channels/linq";
 import { z } from "zod";
 

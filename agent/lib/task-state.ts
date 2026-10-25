@@ -1,6 +1,6 @@
 import { defineState } from "eve/context";
 
-import type { BrowserProxyLocation, BrowserState } from "../../server/types.js";
+import type { BrowserProxyLocation, BrowserState } from "../../server/browser/types.js";
 
 export type TaskStatus =
   "idle" | "running" | "solving_captcha" | "waiting_for_user" | "complete" | "failed" | "canceled";
