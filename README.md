@@ -1,6 +1,11 @@
-# BELL 🔔
+# BELL
 
-**Ring the BELL and put your personal assistant to work.** 
+<img width="512" height="512" alt="pixel-bell-512" src="https://github.com/user-attachments/assets/f4c9363d-2ab0-4205-a3c7-7d7ad61ec6c6" />
+
+
+**BELL is a reference architecture and sample app for developers building personal assistants. Developers should have a practical starting point for building their own versions that are truly performant on execution.**
+
+Browserbase, Linq, 1Password, Baselayer, and Stripe power assistants that execute tasks on your behalf.
 
 Bell pairs an Eve agent with browser
 automation powered by Browserbase and a compact web interface. This standalone repository owns
