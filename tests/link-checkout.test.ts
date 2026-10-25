@@ -36,6 +36,27 @@ describe("Link checkout guards", () => {
     expect(execute).not.toHaveBeenCalled();
   });
 
+  it.each([
+    { id: "spend_1", include: ["card,shared_payment_token"] },
+    { id: "spend_1", include: ["unknown_credential"] },
+    ...["spend_1?include=card", "spend_1#card", "../spend_1", "spend_1%3Finclude%3Dcard"].map((id) => ({ id })),
+  ])("rejects malformed credential requests before calling Link: %j", async (input) => {
+    vi.stubEnv("BROWSIE_LOG_SESSION", "true");
+    const execute = vi.spyOn(retrieve_spend_request, "execute").mockResolvedValue(request("approved"));
+    await expect(retrieve.execute(input as Parameters<typeof retrieve.execute>[0], context)).rejects.toThrow();
+    expect(execute).not.toHaveBeenCalled();
+    expect(runBrowserOperation).not.toHaveBeenCalled();
+  });
+
+  it.each([undefined, []])("permits status-only retrieval with include=%j", async (include) => {
+    vi.stubEnv("BROWSIE_LOG_SESSION", "true");
+    const input = { id: "spend_1", include };
+    const execute = vi.spyOn(retrieve_spend_request, "execute").mockResolvedValue(request("approved"));
+    await expect(retrieve.execute(input, context)).resolves.toMatchObject({ status: "approved" });
+    expect(execute).toHaveBeenCalledExactlyOnceWith(input, expect.objectContaining(context));
+    expect(runBrowserOperation).not.toHaveBeenCalled();
+  });
+
   it.each(["created", "pending_approval", "requires_action", "denied", "expired", "canceled", "failed"])(
     "returns %s status without requesting credentials", async (status) => {
       vi.stubEnv("BROWSIE_LOG_SESSION", "false");
@@ -46,16 +67,18 @@ describe("Link checkout guards", () => {
     },
   );
 
-  it("checks approval and the actual browser before retrieving credentials", async () => {
+  it.each([
+    ["card"], ["shared_payment_token"], ["link_pay_token"], ["card", "shared_payment_token"],
+  ] as const)("checks approval and the actual browser before retrieving %j", async (...include) => {
     vi.stubEnv("BROWSIE_LOG_SESSION", "false");
     const execute = vi.spyOn(retrieve_spend_request, "execute").mockResolvedValue(request("approved"));
     const hosted = vi.fn(async (_signal, operation) => operation());
     vi.mocked(runBrowserOperation).mockImplementation(async (_session, operation) => ({
       result: await operation({ withHostedPage: hosted } as never), workbench: {},
     }) as never);
-    await retrieve.execute({ id: "spend_1", include: ["card"] }, context);
+    await retrieve.execute({ id: "spend_1", include: [...include] }, context);
     expect(execute).toHaveBeenNthCalledWith(1, { id: "spend_1" }, expect.objectContaining(context));
-    expect(execute).toHaveBeenNthCalledWith(2, { id: "spend_1", include: ["card"] }, expect.objectContaining(context));
+    expect(execute).toHaveBeenNthCalledWith(2, { id: "spend_1", include: [...include] }, expect.objectContaining(context));
     expect(hosted).toHaveBeenCalledOnce();
   });
 

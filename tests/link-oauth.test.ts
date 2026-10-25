@@ -5,7 +5,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import type { ToolContext } from "eve/tools";
 import { hash, type LinkConfig } from "../server/link/config";
 import { LinkOAuth } from "../server/link/oauth";
-import { LinkStore } from "../server/link/store";
+import { LinkStore, OwnerStore } from "../server/link/store";
 import { linkCallback } from "../server/link/callback";
 import { createLinkAuth, freshLinkContext } from "../agent/lib/link-auth";
 import { ContextContainer, contextStorage } from "../node_modules/eve/dist/src/context/container.js";
@@ -180,6 +180,44 @@ describe.skipIf(!databaseUrl)("Link OAuth with PostgreSQL", () => {
     fetcher.mockRejectedValue(new Error("connection lost with secret data"));
     await expect(service.complete(principal, callbackUrl, start.resume, params)).rejects.toMatchObject({ reason: "link_request_failed" });
     await expect(service.complete(principal, callbackUrl, start.resume, params)).rejects.toMatchObject({ reason: "authorization_expired" });
+    expect(fetcher).toHaveBeenCalledOnce();
+  });
+
+  it.each(["bell_link_grants", "bell_link_oauth_attempts"])("keeps authorization blocked if the final %s write fails", async (table) => {
+    const { start, state } = await begin();
+    const params = { state, code: "single-use-code" };
+    await service.forward(params);
+    await pool.query(`CREATE FUNCTION reject_completion() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
+      IF NEW.status IN ('active', 'completed') THEN RAISE EXCEPTION 'completion write failed'; END IF;
+      RETURN NEW;
+    END $$;
+    CREATE TRIGGER reject_completion BEFORE UPDATE ON ${table} FOR EACH ROW EXECUTE FUNCTION reject_completion();`);
+    try {
+      await expect(service.complete(principal, callbackUrl, start.resume, params)).rejects.toThrow("completion write failed");
+    } finally {
+      await pool.query(`DROP TRIGGER reject_completion ON ${table}; DROP FUNCTION reject_completion();`);
+    }
+    expect((await pool.query("SELECT status, encrypted_tokens FROM bell_link_grants WHERE principal_id = $1", [principal.id])).rows[0])
+      .toEqual({ status: "reconnect", encrypted_tokens: null });
+    expect(await store.findAttempt(hash(state))).toMatchObject({ status: "exchanging" });
+    const restarted = new LinkOAuth(config, new LinkStore(pool), fetcher, () => now);
+    await expect(restarted.complete(principal, callbackUrl, start.resume, params)).rejects.toMatchObject({ reason: "authorization_expired" });
+    await expect(restarted.getToken(principal)).rejects.toMatchObject({ name: "ConnectionAuthorizationRequiredError" });
+    expect(fetcher).toHaveBeenCalledOnce();
+  });
+
+  it("replays committed authorization after its persistence acknowledgment is lost", async () => {
+    const { start, state } = await begin();
+    const params = { state, code: "single-use-code" };
+    await service.forward(params);
+    const save = OwnerStore.prototype.saveAuthorization;
+    vi.spyOn(OwnerStore.prototype, "saveAuthorization").mockImplementationOnce(async function (this: OwnerStore, grant, attempt) {
+      await save.call(this, grant, attempt);
+      throw new Error("persistence acknowledgment lost");
+    });
+    await expect(service.complete(principal, callbackUrl, start.resume, params)).rejects.toThrow("persistence acknowledgment lost");
+    const restarted = new LinkOAuth(config, new LinkStore(pool), fetcher, () => now);
+    await expect(restarted.complete(principal, callbackUrl, start.resume, params)).resolves.toMatchObject({ token: "access-first" });
     expect(fetcher).toHaveBeenCalledOnce();
   });
 

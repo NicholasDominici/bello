@@ -45,6 +45,18 @@ export class OwnerStore {
     );
   }
 
+  async saveAuthorization(grant: Grant, attempt: Attempt): Promise<void> {
+    await this.client.query("BEGIN");
+    try {
+      await this.saveGrant(grant);
+      await this.saveAttempt(attempt);
+      await this.client.query("COMMIT");
+    } catch (error) {
+      await this.client.query("ROLLBACK");
+      throw error;
+    }
+  }
+
   async attempt(id: string): Promise<Attempt | undefined> {
     return (await this.client.query<Attempt>(
       "SELECT * FROM bell_link_oauth_attempts WHERE id = $1 AND issuer = $2 AND principal_id = $3",

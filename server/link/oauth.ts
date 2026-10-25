@@ -208,18 +208,22 @@ export class LinkOAuth {
       }
       const secrets = unseal<Secrets>(attempt.encrypted_secrets, this.config.encryptionKey, this.attemptContext(owner, attempt.id));
       await db.saveAttempt({ ...attempt, status: "exchanging" });
+      let tokens: Tokens;
       try {
-        const tokens = await this.exchange({
+        tokens = await this.exchange({
           grant_type: "authorization_code", redirect_uri: this.config.redirectUri,
           code: callback.code!, code_verifier: secrets.verifier,
         });
-        await db.saveGrant({ ...grant, status: scopes.every((scope) => tokens.scopes.includes(scope)) ? "active" : "reconnect", encrypted_tokens: this.encryptedTokens(owner, tokens) });
-        await db.saveAttempt({ ...attempt, status: "completed", encrypted_secrets: null });
-        return this.tokenResult(tokens);
       } catch (error) {
         await db.saveAttempt({ ...attempt, status: "failed", encrypted_secrets: null });
         throw error;
       }
+      const authorized = scopes.every((scope) => tokens.scopes.includes(scope));
+      await db.saveAuthorization(
+        { ...grant, status: authorized ? "active" : "reconnect", encrypted_tokens: this.encryptedTokens(owner, tokens) },
+        { ...attempt, status: authorized ? "completed" : "failed", encrypted_secrets: null },
+      );
+      return this.tokenResult(tokens);
     });
   }
 

@@ -1,9 +1,13 @@
 import { retrieve_spend_request } from "@stripe/link-integrations-eve/tools";
 import { runBrowserOperation } from "browsie/runtime";
 import { defineTool, type ToolContext } from "eve/tools";
+import { z } from "zod";
 import { freshLinkContext } from "../../../lib/link-auth";
 
-const credentials = new Set(["card", "shared_payment_token", "link_pay_token"]);
+const inputSchema = z.strictObject({
+  id: z.string().regex(/^[A-Za-z0-9_-]+$/, "Invalid Link spend-request ID."),
+  include: z.array(z.enum(["card", "shared_payment_token", "link_pay_token"])).optional(),
+});
 
 async function retrieve(input: Parameters<typeof retrieve_spend_request.execute>[0], ctx: ToolContext) {
   const result = await retrieve_spend_request.execute(input, freshLinkContext(ctx));
@@ -14,9 +18,10 @@ async function retrieve(input: Parameters<typeof retrieve_spend_request.execute>
 
 export default defineTool({
   ...retrieve_spend_request,
-  async execute(input, ctx) {
-    if (!input.include?.some((value) => credentials.has(value)))
-      return retrieve(input, ctx);
+  inputSchema,
+  async execute(args, ctx) {
+    const input = inputSchema.parse(args);
+    if (!input.include?.length) return retrieve(input, ctx);
     if (process.env.BROWSIE_LOG_SESSION !== "false")
       throw new Error("Set BROWSIE_LOG_SESSION=false before retrieving Link payment credentials.");
     // A callback or a user's 'done' message is not evidence of purchase approval.
