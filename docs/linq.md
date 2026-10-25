@@ -7,7 +7,7 @@ verified sender identity and require separate configuration.
 ```text
 Your phone -> Linq -> Bell /eve/v1/linq -> Eve conversation
                                               |
-                           shared Browsie tools + Browserbase browser
+                           Bell browser tools + Browserbase browser
                                               |
 Your phone <- Linq <- Bell's reply in the original chat
 ```
@@ -41,7 +41,8 @@ still need a reachable HTTPS application host. See
    sending number are different settings. An empty or invalid sender list accepts nobody.
    For this single-operator demo, allow only the operator's numbers because saved vault and
    browser Context data are shared. Group chats and iMessage email handles are not supported
-   by this phone-only policy. `BROWSIE_LINQ_ALLOWED_USER_IDS` configures Browsie, not Bell.
+   by this phone-only policy. Bell uses `BELL_LINQ_ALLOWED_SENDERS`; the former
+   `BROWSIE_LINQ_ALLOWED_USER_IDS` setting has no effect.
 
 2. Deploy Bell behind your chosen HTTPS application origin. Protect the web UI,
    session-control routes, and any administration endpoints with application authentication.

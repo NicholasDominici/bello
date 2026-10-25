@@ -10,7 +10,7 @@ import { taskState } from "../lib/task-state";
 const selector = z.string().min(1).max(500);
 export default defineTool({
   description:
-    "Fill and submit a mapped Login without exposing credentials to the model. Navigate and snapshot first. Pass the opaque item handle plus exact selectors. A successTarget is required to prove login. If an OTP field exists but the item has no TOTP secret, this returns waiting_for_user; immediately call ask_question so the Eve task parks durably.",
+    "Fill and submit a mapped Login without exposing credentials to the model. Navigate and snapshot first. Pass the opaque item handle plus exact selectors. A successTarget is required to prove login. If this returns waiting_for_user, call human_handoff with reason otp (or captcha for a CAPTCHA challenge), share the returned handoff URL, and end the turn until the user replies done.",
   inputSchema: z.object({
     provider: z.enum(["native", "onepassword"]),
     itemId: z.string().min(1),

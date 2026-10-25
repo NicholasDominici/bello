@@ -29,18 +29,11 @@ export interface CaptchaTransition {
 export const CAPTCHA_JOURNAL_LIMIT = 32;
 export type BrowserLifecycle =
   "not_started" | "starting" | "active" | "disconnected" | "expired" | "closed" | "error";
-export interface DurableTaskMessage {
-  id: string;
-  role: "user" | "assistant";
-  text: string;
-  at: string;
-}
 export interface DurableTaskRecord {
   version: 1;
   taskId: string;
   sessionId: string;
   title: string;
-  messages: DurableTaskMessage[];
   status: TaskStatus;
   activeStep?: string;
   waitReason?: "otp" | "captcha" | "approval" | "other";
@@ -54,29 +47,18 @@ export interface DurableTaskRecord {
     url?: string;
     title?: string;
   };
-  loadedSkillIds: string[];
-  artifacts: Array<{
-    id: string;
-    kind: string;
-    label: string;
-    createdAt: string;
-  }>;
-  traceEventIds: string[];
   processedEventIds: string[];
   createdAt: string;
   updatedAt: string;
 }
+// Keep the persisted key so existing Bell sessions retain their browser and Context.
 export const taskState = defineState<DurableTaskRecord>("browsie.task.v1", () => ({
   version: 1,
   taskId: "",
   sessionId: "",
   title: "New task",
-  messages: [],
   status: "idle",
   browser: { lifecycle: "not_started" },
-  loadedSkillIds: [],
-  artifacts: [],
-  traceEventIds: [],
   processedEventIds: [],
   createdAt: "",
   updatedAt: "",
@@ -108,24 +90,9 @@ export function applyTaskEvent(
     processedEventIds: id ? [...next.processedEventIds, id].slice(-2_000) : next.processedEventIds,
     updatedAt: at,
   };
-  if (event.type === "message.received") {
+  if (event.type === "message.received" && next.title === "New task") {
     const text = safeText(event.data?.message ?? event.data?.text);
-    if (text)
-      next = appendMessage(next, {
-        id: id ?? `user-${at}`,
-        role: "user",
-        text,
-        at,
-      });
-  } else if (event.type === "message.completed") {
-    const text = safeText(event.data?.message);
-    if (text)
-      next = appendMessage(next, {
-        id: id ?? `assistant-${at}`,
-        role: "assistant",
-        text,
-        at,
-      });
+    if (text) next = { ...next, title: text.slice(0, 64) };
   } else if (event.type === "turn.started")
     next = captchaBlocksGeneric(next)
       ? next
@@ -153,26 +120,7 @@ export function applyTaskEvent(
       activeStep: "resuming",
       waitReason: undefined,
     };
-  else if (event.type === "action.result") {
-    const result = event.data?.result;
-    if (result && typeof result === "object") {
-      const action = result as Record<string, unknown>;
-      if (action.kind === "load-skill-result" && typeof action.name === "string" && !action.isError)
-        next = {
-          ...next,
-          loadedSkillIds: [...new Set([...next.loadedSkillIds, action.name])],
-        };
-    }
-  } else if (event.type === "turn.completed")
-    next = captchaBlocksGeneric(next)
-      ? next
-      : {
-          ...next,
-          status: "idle",
-          activeStep: undefined,
-          waitReason: undefined,
-        };
-  else if (event.type === "session.waiting")
+  else if (event.type === "turn.completed" || event.type === "session.waiting")
     next = captchaBlocksGeneric(next)
       ? next
       : {
@@ -295,7 +243,6 @@ function captchaHandoff(
 export function updateTaskBrowser(
   record: DurableTaskRecord,
   browser: BrowserState,
-  traceIds: string[],
 ): DurableTaskRecord {
   const lifecycle: BrowserLifecycle =
     browser.status === "starting"
@@ -326,7 +273,6 @@ export function updateTaskBrowser(
       url: safePageUrl(browser.url),
       title: safeText(browser.title),
     },
-    traceEventIds: [...new Set([...record.traceEventIds, ...traceIds])].slice(-2_000),
     updatedAt: new Date().toISOString(),
   };
 }
@@ -370,20 +316,6 @@ export function recordTaskBrowserContext(
   };
 }
 
-export function recordTaskBrowserProxyLocation(
-  record: DurableTaskRecord,
-  proxyLocation: BrowserProxyLocation,
-): DurableTaskRecord {
-  return {
-    ...record,
-    browser: {
-      ...record.browser,
-      proxyLocation,
-    },
-    updatedAt: new Date().toISOString(),
-  };
-}
-
 export function closeTaskBrowser(record: DurableTaskRecord): DurableTaskRecord {
   return {
     ...record,
@@ -394,14 +326,6 @@ export function closeTaskBrowser(record: DurableTaskRecord): DurableTaskRecord {
     },
     updatedAt: new Date().toISOString(),
   };
-}
-function appendMessage(record: DurableTaskRecord, message: DurableTaskMessage): DurableTaskRecord {
-  if (record.messages.some((item) => item.id === message.id)) return record;
-  const title =
-    record.messages.some((item) => item.role === "user") || message.role !== "user"
-      ? record.title
-      : message.text.slice(0, 64);
-  return { ...record, title, messages: [...record.messages, message] };
 }
 function classifyWait(data?: Record<string, unknown>): DurableTaskRecord["waitReason"] {
   const value = JSON.stringify(data ?? {}).toLowerCase();

@@ -66,7 +66,7 @@ then provides a separate purchase approval URL. Approve there, then text Bell to
 Bell retrieves the same spend request to verify approval before obtaining credentials. It also
 checks that the actual Browserbase session has logging disabled. If a browser was started with
 logging enabled, set `BROWSIE_LOG_SESSION=false` and restart Bell. Then ask Bell to reopen and
-revalidate checkout in the same text conversation. Browsie replaces an unsafe persisted browser;
+revalidate checkout in the same text conversation. Bell replaces an unsafe persisted browser;
 the replacement may need to navigate to checkout again.
 An issued credential is not proof of purchase: Bell must observe the merchant's result and
 check order state before retrying an uncertain submission.
@@ -122,7 +122,7 @@ DELETE FROM bell_link_oauth_attempts WHERE expires_at < now() - interval '1 day'
 ```
 
 PostgreSQL here stores Link state only. Eve still needs durable workflow storage to resume
-parked turns after host replacement, and Browsie's Context/vault files need their documented
+parked turns after host replacement, and Bell's Context/vault files need their documented
 storage. This change does not make the rest of Bell ready for arbitrary multi-instance hosting
 or unrelated users.
 
@@ -137,7 +137,7 @@ does not disable Eve event persistence.
 
 ## Verify
 
-`pnpm check:workspace` runs mock provider tests. Set `TEST_LINK_DATABASE_URL` to a disposable
+`pnpm check` runs mock provider tests. Set `TEST_LINK_DATABASE_URL` to a disposable
 PostgreSQL database to include persistence tests. The suite creates and drops a unique schema;
 it never uses `DATABASE_URL` or calls Link. CI provides PostgreSQL automatically. Tests cover
 encryption, identity isolation, callbacks, restart recovery, concurrent refresh, revocation,

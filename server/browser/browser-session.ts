@@ -604,7 +604,7 @@ export class BrowsieBrowserSession {
         this.state,
         "system",
         "browser.replace",
-        "The saved Browserbase session expired. Browsie is starting a replacement with the same Context.",
+        "The saved Browserbase session expired. Bell is starting a replacement with the same Context.",
         {
           contextPreserved: Boolean(this.options.contextId ?? process.env.BROWSERBASE_CONTEXT_ID),
         },
@@ -639,7 +639,7 @@ export class BrowsieBrowserSession {
             this.state,
             "system",
             "browser.start.retry",
-            `The Browserbase connection failed. Browsie will retry with a new verified, proxied session (${attempt}/3).`,
+            `The Browserbase connection failed. Bell will retry with a new verified, proxied session (${attempt}/3).`,
             { attempt, proxies: true, verified: true },
           );
           await new Promise((resolve) => setTimeout(resolve, attempt * 500));
@@ -908,7 +908,7 @@ export function browserbaseLaunchOptions(
       ...(contextId ? { context: { id: contextId, persist: true } } : {}),
     },
     userMetadata: {
-      product: "browsie",
+      product: "bell",
       transport: "stagehand-v4-eve",
       networkLogging: String(process.env.BROWSIE_LOG_SESSION === "true"),
     },

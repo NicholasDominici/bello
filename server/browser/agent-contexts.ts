@@ -100,7 +100,7 @@ export async function ensureAgentContext(
   }
 
   await deleteExpiredDraftContexts(now);
-  const name = `Browsie draft ${shortSessionId(ownerSessionId)}`;
+  const name = `Bell draft ${shortSessionId(ownerSessionId)}`;
   const remote = await sdk.contexts.create({
     name,
     ...(process.env.BROWSERBASE_PROJECT_ID

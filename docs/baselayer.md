@@ -24,7 +24,7 @@ BROWSIE_LOG_SESSION=false
 
 Keep the OpenAI and Browserbase credentials already used by Bell. For the phone demo, also keep
 the Linq configuration from [the messaging guide](linq.md). Restart Bell and start a new
-conversation after changing browser logging settings. The shared runtime refuses credential
+conversation after changing browser logging settings. The browser runtime refuses credential
 presentation if the browser session started with logging enabled.
 
 The principal reference is the `principal_ref` returned after identity verification. It is not

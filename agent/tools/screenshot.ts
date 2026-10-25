@@ -5,7 +5,7 @@ import { runBrowserOperation, runCancelableBrowserWork } from "../lib/browser-ru
 
 export default defineTool({
   description:
-    "Capture the visible page when layout, images, or visual state are important. The Browsie workbench shows the image.",
+    "Capture the visible page when layout, images, or visual state are important. Bell's web chat shows the image in its browser preview.",
   inputSchema: z.object({}),
   async execute(_input, ctx) {
     return runCancelableBrowserWork(ctx.session.id, ctx.abortSignal, () =>

@@ -6,7 +6,7 @@ const event = (output: unknown, isError = false) => ({
   data: { result: { kind: "tool-result", output, isError } },
 });
 describe("shared browser output in the Bell panel", () => {
-  it("reads Browsie's nested screenshot without copying its UI", () => {
+  it("reads the browser runtime's nested screenshot", () => {
     expect(
       browserPreview([
         event({

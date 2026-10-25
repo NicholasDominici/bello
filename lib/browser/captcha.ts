@@ -20,10 +20,6 @@ export function parseBrowserbaseCaptchaEvent(value: unknown): CaptchaSignal | un
   if (message === CAPTCHA_EVENT_NAMES[2]) return "errored";
 }
 
-export function captchaSignalMessage(signal: CaptchaSignal): (typeof CAPTCHA_EVENT_NAMES)[number] {
-  return `browserbase-solving-${signal}` as (typeof CAPTCHA_EVENT_NAMES)[number];
-}
-
 export function safeCaptchaPage(value?: string): { origin: string; path: string } | undefined {
   try {
     if (!value) return;

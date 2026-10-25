@@ -9,7 +9,7 @@ const HANDOFF_TTL_MS = 10 * 60 * 1_000;
 
 export default defineTool({
   description:
-    "Create a short-lived Browsie Live View link when the user must act in the current browser, such as completing an OTP, login, CAPTCHA, passkey, or other human-only step. The browser must already be running. After this tool returns, print the complete raw handoff URL on its own line, never hide it in Markdown link syntax, ask the user to reply done, and end the turn. Do not call ask_question.",
+    "Create a short-lived Browserbase Live View link when the user must act in the current browser, such as completing an OTP, login, CAPTCHA, passkey, or other human-only step. The browser must already be running. After this tool returns, print the complete raw handoff URL on its own line, never hide it in Markdown link syntax, ask the user to reply done, and end the turn.",
   inputSchema: z.object({
     reason: z.enum(["otp", "login", "captcha", "passkey", "other"]),
   }),

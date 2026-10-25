@@ -215,7 +215,7 @@ export class OnePasswordVaultProvider implements VaultProvider {
         const sdk = await import("@1password/sdk");
         return sdk.createClient({
           auth: token || new sdk.DesktopAuth(account!),
-          integrationName: "Browsie",
+          integrationName: "Bell",
           integrationVersion: "0.1.0",
         });
       })();
