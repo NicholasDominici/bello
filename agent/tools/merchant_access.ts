@@ -1,6 +1,6 @@
 import { defineTool, toolOutput } from "eve/tools";
 import { z } from "zod";
-import { runBrowserOperation, runCancelableBrowserWork } from "browsie/runtime";
+import { runBrowserOperation, runCancelableBrowserWork } from "../lib/browser-runtime";
 import { allowedMerchantUrl } from "../../server/merchant-access";
 import { verifiedMerchantAccess } from "../../server/verified-merchant";
 

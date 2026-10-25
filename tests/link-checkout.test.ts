@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { create_spend_request, retrieve_spend_request } from "@stripe/link-integrations-eve/tools";
-import { runBrowserOperation } from "browsie/runtime";
+import { runBrowserOperation } from "../agent/lib/browser-runtime";
 import create from "../agent/extensions/link/tools/create_spend_request";
 import retrieve from "../agent/extensions/link/tools/retrieve_spend_request";
 import disconnect from "../agent/tools/link_disconnect";
 
-vi.mock("browsie/runtime", () => ({ runBrowserOperation: vi.fn() }));
+vi.mock("../agent/lib/browser-runtime", () => ({ runBrowserOperation: vi.fn() }));
 const context = { session: { id: "linq-chat-session" }, abortSignal: new AbortController().signal } as never;
 const purchase = {
   credential_type: "card" as const, amount: 4200, currency: "usd",

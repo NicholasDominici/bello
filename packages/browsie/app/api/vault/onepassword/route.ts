@@ -1,6 +1,6 @@
-import { studioAccess } from "../../../../server/studio-auth";
-import { onePasswordVault } from "../../../../server/vault/index";
-import { safeError } from "../../../../server/vault/types";
+import { studioAccess } from "../../../../../../server/browser/studio-auth";
+import { onePasswordVault } from "../../../../../../server/browser/vault/index";
+import { safeError } from "../../../../../../server/browser/vault/types";
 
 export const runtime = "nodejs";
 export async function GET(request: Request) {

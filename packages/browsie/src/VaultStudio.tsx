@@ -3,7 +3,7 @@
 import { ArrowLeft, KeyRound, LockKeyhole, ShieldCheck } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 
-import type { SafeLoginItem, VaultProviderStatus } from "../server/vault/types";
+import type { SafeLoginItem, VaultProviderStatus } from "../../../server/browser/vault/types";
 
 type View = "home" | "native" | "onepassword";
 const blank = {

@@ -1,19 +1,17 @@
 # Bell and Browsie workspace
 
 Bell lives in [browserbase/bell-stack](https://github.com/browserbase/bell-stack).
-The complete Browsie package is tracked here so contributors can review and change both sides
-of the browser integration in one pull request.
+Bell owns the shared browser implementation. The standalone Browsie interface consumes the
+same source and dependencies without a separate package or library build.
 
 ```text
-agent/                  Bell's Eve agent, Linq channel, and tool imports
+agent/                  Bell's tools, hooks, runtime, and channels
 app/                    Bell's web interface and handoff routes
-server/                 Bell's Baselayer and Link OAuth integrations
-packages/browsie/        Browsie source, standalone app, shared exports, and tests
-scripts/                Bell's standalone mint command
-tests/                  Bell's tests
-docs/                   Setup and demo guides
-pnpm-workspace.yaml     Workspace package membership
-pnpm-lock.yaml          Shared dependency resolutions
+server/browser/         Browser sessions, Context metadata, credentials, and handoff
+lib/browser/            Shared browser URL and CAPTCHA helpers
+packages/browsie/        Standalone UI, management routes, agent entrypoints, and tests
+package.json            Dependencies and commands for both applications
+pnpm-lock.yaml          One dependency resolution tree
 ```
 
 ## Source provenance
@@ -47,23 +45,19 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-`pnpm dev` and `pnpm build` first build Browsie's shared exports. After editing runtime code,
-run `pnpm setup:runtime` and restart Bell. The package's standalone app can be started with
-`pnpm --filter browsie dev`; it has its own configuration and runs on port 4318.
-
-Bell depends on `browsie` through `workspace:*`. Imports such as `browsie/runtime` and
-`browsie/tools/run` resolve to `packages/browsie`. Bell still calls the runtime in-process,
-with one browser per conversation. Importing the package does not start its standalone app.
+`pnpm dev` and `pnpm build` compile the runtime directly. The standalone app starts with
+`pnpm dev:studio` and builds with `pnpm build:studio`; its working directory and configuration
+remain `packages/browsie`, and its port remains 4318. There is no `browsie` package dependency,
+package export map, or prebuilt runtime artifact. Each application still has its own agent
+entrypoints and TypeScript configuration; dependency versions, tests, and lint are managed at the root.
 
 ## Verify changes
 
-Run `pnpm check:workspace` from the root. It runs Browsie's tests, typecheck, lint,
-and production build, followed by Bell's tests, typecheck, lint, and production
-build. Bell and Browsie each use their own TypeScript and ESLint configurations. CI checks both.
-
-The default tests use mocks. Provider-backed tests are opt-in and require service configuration;
-report those separately. Keep Eve versions aligned and repeat the workspace checks when changing
-shared dependencies. Keep generated `dist`, `.eve`, `.next`, `.output`, and browser data untracked.
+Run `pnpm check:workspace` from the root. It runs the combined tests, both TypeScript
+checks, root lint, and both production builds. CI checks both apps. The tests verify that Bell's
+tools and lifecycle hooks share one runtime, without a package compilation boundary.
+Provider-backed tests remain opt-in; report those separately. Keep generated `.eve`, `.next`,
+`.output`, dependencies, and browser data untracked.
 
 ## Browser retirement
 

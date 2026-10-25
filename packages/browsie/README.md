@@ -72,10 +72,10 @@ BROWSIE_HANDOFF_SECRET=<separate-random-secret-at-least-32-characters>
 BROWSIE_LOG_SESSION=false
 ```
 
-Then start the application:
+Then return to the repository root (`cd ../..`) and start the application:
 
 ```bash
-pnpm dev
+pnpm dev:studio
 ```
 
 Generate each secret separately with `openssl rand -base64 32`. Open `http://127.0.0.1:4318` and
@@ -95,7 +95,7 @@ does not provide Browserbase Contexts, Live View, proxies, or Verified Browsers.
 | `BROWSERBASE_API_KEY`      | Hosted mode  | Creates Browserbase sessions and Contexts.                           |
 | `STAGEHAND_BROWSER`        | No           | `auto`, `local`, or `browserbase`.                                   |
 | `BROWSIE_MODEL`            | No           | Model name. Default: `gpt-5.6-sol`.                                  |
-| `BROWSIE_HANDOFF_SECRET`   | Live View    | Encrypts scoped Live View and handoff tokens. Use at least 32 characters. |
+| `BROWSIE_HANDOFF_SECRET`   | Handoff      | Encrypts scoped handoff tokens. Use at least 32 characters.              |
 | `BROWSIE_PUBLIC_URL`       | Handoff      | Public HTTPS origin for handoff links.                               |
 | `BROWSIE_VAULT_MASTER_KEY` | Native vault | Encrypts the local vault example.                                    |
 | `OP_SERVICE_ACCOUNT_TOKEN` | 1Password    | Gives server-side access to an allowed 1Password vault.              |
@@ -106,13 +106,10 @@ Read [`.env.example`](.env.example) for every option. Never commit `.env` or sec
 
 ## Test it
 
-The default tests do not call live services. From this directory, run:
+The default tests do not call live services. From the repository root, run:
 
 ```bash
-pnpm test
-pnpm typecheck
-pnpm lint
-pnpm build
+pnpm check:workspace
 ```
 
 The `*-real.test.ts` and live CAPTCHA tests need explicit service credentials. They skip when the
@@ -154,8 +151,8 @@ multi-tenant service.
   form entry and vault login; start a new session with logging off before entering private data.
 - The standalone web app and management APIs require the configured operator login. Use HTTPS
   outside loopback. Management tokens are signed, expire after six hours, and are invalidated by
-  operator credential rotation. Agent Live View additionally requires a ten-minute token scoped
-  to that browser; knowing an unrelated Browserbase session ID does not grant access.
+  operator credential rotation. Agent Live View verifies the active browser in the authenticated task history; knowing an
+  unrelated Browserbase session ID does not grant access. Public handoff links expire after ten minutes.
 - Configure `BROWSIE_LINQ_ALLOWED_USER_IDS` for trusted operators before enabling Linq; an empty
   list accepts no senders. All configured operators share the same vaults and Contexts.
 
@@ -176,21 +173,13 @@ rotation and deletion procedures.
 
 Browsie is licensed under the MIT License. See [`LICENSE`](LICENSE).
 
-## Reuse the browser runtime
+## Shared browser implementation
 
-Bell depends on this private workspace package with `"browsie": "workspace:*"`.
-Install dependencies from the repository root with `pnpm install --frozen-lockfile`.
-Run `pnpm build:library` from this directory to rebuild the shared exports after editing them.
-Bell's development and production build commands also build these exports before starting.
-The public exports are `browsie/runtime`, `browsie/tools/*`, `browsie/hooks/*`,
-`browsie/channels/linq`, and the two handoff routes. Exports provide compiled JavaScript plus source types; consumers use the same Eve version.
-The generated `dist/shared` directory is not committed. One shared bundle keeps browser state
-consistent across all tools and hooks. These exports do not start a second agent or browser service.
+The root `agent/lib`, `agent/tools`, `server/browser`, and `lib/browser` directories own browser behavior.
+This app imports them directly and keeps its own UI and agent entrypoints. One root manifest and
+lockfile supply both applications; no package export map or generated library is needed.
 
-Re-export the browser lifecycle and task-state hooks alongside the selected tools. Every custom
-browser tool must use `runBrowserOperation` and `runCancelableBrowserWork` from `browsie/runtime`.
-A server-side integration can call `browser.withHostedPage(signal, callback)` to work with the
-existing hosted page under its operation lock. Set `BROWSIE_LOG_SESSION=false` before starting
-that session. Never return the connection URL or credential headers from the callback.
-
-The Bell-Stack project is a consumer of this interface. Browsie remains independently runnable.
+Every custom browser tool must use `runBrowserOperation` and `runCancelableBrowserWork` from
+`agent/lib/browser-runtime`. A server integration can call `browser.withHostedPage(signal, callback)`
+under the same operation lock. Keep `BROWSIE_LOG_SESSION=false` and never return a connection URL
+or credential headers from the callback. Run `pnpm dev:studio` from the repository root for this UI.

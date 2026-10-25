@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { browserbase, localBrowser } from "@browserbasehq/stagehand";
-import { BrowsieBrowserSession, browserbaseLaunchOptions } from "../server/browser-session";
-import type { ConversationState } from "../server/types";
+import { BrowsieBrowserSession, browserbaseLaunchOptions } from "../../../server/browser/browser-session";
+import type { ConversationState } from "../../../server/browser/types";
 
 function fixture(loggingDisabled = true) {
   const state: ConversationState = {

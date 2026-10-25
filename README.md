@@ -5,13 +5,13 @@
 Bell pairs an Eve agent with browser
 automation powered by Browserbase and a compact web interface. This standalone repository owns
 Bell's agent, interface, configuration, and merchant integration.
-The pinned `browsie` package supplies Stagehand/Browserbase session management, browser tools,
+Bell directly owns Stagehand/Browserbase session management, browser tools,
 Contexts, human handoff, and optional 1Password access. Bell adds Linq iMessage/SMS messaging
 with a signed webhook and a private sender list.
 
 ## Run locally
 
-Use Node.js 24 and pnpm 10.33.4. Clone Bell and install its workspace:
+Use Node.js 24 and pnpm 10.33.4. Clone Bell and install its dependencies:
 
 ```sh
 git clone https://github.com/browserbase/bell-stack.git
@@ -27,15 +27,11 @@ in one persistent Browserbase session. Ask for a screenshot to update the captur
 messages at the same `/s/...` address reuse the conversation and browser. Stop cancels active work.
 The panel is a screenshot viewer; use `human_handoff` when you need to interact with the browser.
 
-The `browsie` dependency is the local workspace package in `packages/browsie`. Its source,
-standalone application, and tests are included in this repository. `pnpm dev` and `pnpm build`
-build its shared exports automatically; `pnpm setup:runtime` rebuilds them explicitly after
-editing Browsie. Restart Bell after a runtime change. Bell calls the runtime in the same process,
-with one Eve runtime and one browser per conversation. Keep Eve versions aligned across both
-packages. The root lockfile covers the whole workspace.
-
-The package was imported from the exact Cookbook revision previously pinned by Bell. See
-[the repository layout and source provenance](docs/repository.md).
+Browser tools, hooks, and runtime code live directly in Bell. Both web apps use the root
+`package.json` and lockfile; there is no separate browser package or library build.
+The optional Browsie interface remains in `packages/browsie`; run it with `pnpm dev:studio`.
+Its existing environment and data paths are unchanged. Restart the running app after runtime edits.
+See [repository layout and source provenance](docs/repository.md).
 
 For phone use, point Linq directly at Bell's HTTPS deployment and use the same origin
 for handoff links. Hosted browser launches keep `browserSettings.verified: true` and

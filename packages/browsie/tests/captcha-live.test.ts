@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { BrowsieBrowserSession } from "../server/browser-session.js";
-import type { ConversationState } from "../server/types.js";
+import { BrowsieBrowserSession } from "../../../server/browser/browser-session.js";
+import type { ConversationState } from "../../../server/browser/types.js";
 
 const live = process.env.BROWSIE_LIVE_CAPTCHA === "1" && Boolean(process.env.BROWSERBASE_API_KEY);
 describe("opt-in hosted CAPTCHA marker fixture", () => {
