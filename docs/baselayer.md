@@ -11,13 +11,14 @@ Bell -> merchant KYA profile -> Baselayer mint -> merchant nonce
 
 ## Configure the sandbox
 
-Set these values in Bell's ignored `.env.local`:
+Set these values in Bell's ignored `.env.local`, replacing `merchant.example.com` with your
+Baselayer-enabled merchant's HTTPS origin:
 
 ```dotenv
 BASELAYER_API_KEY=<sandbox API key>
 BASELAYER_PRINCIPAL_REF=<current verified principal from the same organization>
-BASELAYER_ALLOWED_ORIGINS=https://bell-stack-demo-site.vercel.app
-BELL_DEMO_URL=https://bell-stack-demo-site.vercel.app/protected
+BASELAYER_ALLOWED_ORIGINS=https://merchant.example.com
+BELL_DEMO_URL=https://merchant.example.com/protected
 STAGEHAND_BROWSER=browserbase
 ```
 
@@ -44,7 +45,7 @@ reference. Do not substitute an unrelated identity just to make a mint pass.
 
 With `pnpm dev` running, keep the same web conversation or text the same Linq chat:
 
-1. "Open https://bell-stack-demo-site.vercel.app/protected with ordinary navigation and report
+1. "Open https://merchant.example.com/protected with ordinary navigation and report
    the result." Expect `401 CREDENTIAL_MISSING`.
 2. "Use merchant_access for that URL, then snapshot and screenshot it." A correctly configured
    flow returns `access_granted` with HTTP 200. A mint success alone is not proof of access.
@@ -58,7 +59,7 @@ are reported without retry. This tool does not log in or make purchases.
 For a standalone mint:
 
 ```sh
-pnpm baselayer:mint https://bell-stack-demo-site.vercel.app/protected
+pnpm baselayer:mint https://merchant.example.com/protected
 ```
 
 The command loads `.env`, then `.env.local` when present. It writes the credential and matching
