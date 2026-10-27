@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { beginOAuth, completeOAuth, redirectUri } from "../server/onepassword/oauth";
 
-const origin = "https://bell-stack.vercel.app";
+const origin = "https://bell.example.com";
 
 beforeEach(() => {
   vi.stubEnv("ONEPASSWORD_CLIENT_ID", "synthetic-client");
