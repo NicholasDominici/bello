@@ -53,7 +53,7 @@ approved browser request using `merchant_access`. Configure the sandbox API key,
 principal, and exact merchant origin in `.env.local`. Keep `BROWSIE_LOG_SESSION=false` before
 starting the browser. [Follow the Baselayer setup and verification guide](docs/baselayer.md).
 
-The protected demo is `https://bell-stack-demo-site.vercel.app/protected`. Ordinary navigation
+The protected demo is `https://merchant.example.com/protected`. Ordinary navigation
 should be denied; successful `merchant_access` should return HTTP 200. Sandbox credentials
 usually expire after about one hour; check the returned expiry. Live access requires a current
 verified principal from the same sandbox organization as the API key.
