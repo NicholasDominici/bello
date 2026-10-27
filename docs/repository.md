@@ -60,9 +60,8 @@ See [browser configuration and credential handling](browser-runtime.md).
 
 ## License and ownership
 
-Bell maintains its browser lifecycle and tool adapters in this repository and uses the published
-`stagehand-middleware` package for browser execution. There is no submodule or separate application
-to install. The root [MIT license](../LICENSE) preserves
+Bell maintains its browser implementation directly in this repository. There is no submodule
+or separately maintained application to install. The root [MIT license](../LICENSE) preserves
 the Browserbase copyright and license terms covering the browser source.
 
 ## Browser retirement

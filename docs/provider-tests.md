@@ -4,24 +4,6 @@ Run `pnpm check` for the normal credential-free checks. Live provider tests are
 opt-in and use real service resources. Keep credentials in ignored environment files.
 Browserbase must use `verified: true` and managed proxies, including after launch retries.
 
-## Browser middleware
-
-The middleware regression uses a synthetic form to exercise navigation, CSS selectors,
-snapshot IDs, quoted input, keyboard actions, screenshots, browser reuse, and cleanup.
-Run it on local Chrome:
-
-```sh
-BELL_LIVE_MIDDLEWARE=1 STAGEHAND_BROWSER=local pnpm exec vitest run tests/browser/middleware-real.test.ts
-```
-
-With `BROWSERBASE_API_KEY` available in the process environment, run the same check hosted:
-
-```sh
-BELL_LIVE_MIDDLEWARE=1 STAGEHAND_BROWSER=browserbase pnpm exec vitest run tests/browser/middleware-real.test.ts
-```
-
-The hosted fixture is served over CDP and the test releases its browser when finished.
-
 ## 1Password login and OTP
 
 Use a dedicated test vault with a Login item titled exactly
