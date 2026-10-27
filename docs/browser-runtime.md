@@ -1,7 +1,8 @@
 # Browser runtime
 
 Bell's Eve by Vercel agent owns conversation history and tool execution. Browser tools share one in-process
-Stagehand runtime per Eve session. Follow-up turns reuse the browser; saved Browserbase session
+Stagehand runtime per Eve session, with browser execution provided by the published
+[`stagehand-middleware`](https://www.npmjs.com/package/stagehand-middleware) package. Follow-up turns reuse the browser; saved Browserbase session
 metadata supports reconnecting after a worker restart. Hosted launches request managed proxies,
 Verified Browsers, and keep-alive on every attempt, including retries.
 
@@ -9,6 +10,16 @@ Verified Browsers, and keep-alive on every attempt, including retries.
 `screenshot` captures the page for Bell's viewer. Navigation accepts HTTP and HTTPS URLs without
 embedded credentials. A destination URL cannot change the browser provider. Local fixtures
 require `STAGEHAND_BROWSER=local`.
+
+Bell keeps its typed `run({ actions })` interface: callers can mix CSS selectors and IDs from
+`snapshot` in one batch. The runtime translates these actions into one middleware `run` call,
+with entered values encoded as string literals. Snapshot capture retains the tree, target map,
+URL, and title together; screenshots use the middleware's PNG output. Model-authored JavaScript
+is not accepted by Bell's `run` tool.
+
+Bell owns the browser's launch, reconnect, CAPTCHA gates, privacy policy, and release lifecycle.
+The middleware wraps that existing Stagehand client and does not launch a second browser or
+keeper tab. Protected login and hosted integrations continue under Bell's operation lock.
 
 ## Configuration
 
