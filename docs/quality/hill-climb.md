@@ -75,3 +75,15 @@ Current regression result: 358 passed, 60 skipped; types and lint passed. Full p
 Rendered checks confirmed the production access error retained the typed draft with retry enabled. A real-model answer rendered as a semantic table and fenced code block in the in-app browser. Transcript following now keeps new answers visible while allowing the operator to scroll back.
 
 The real Stop button was checked after a visible browser capture: it returned to `Stopped`, cleared the old capture, and enabled a new conversation. New conversation then returned to `Ready`. A 390px mobile viewport measured a 390px document width, with readable controls and no horizontal overflow.
+
+## Iteration 5: Orbit product direction and the O integration
+
+The operator rejected the first visual direction and selected Orbit's existing product styling, then authorized direct publication to main without another approval round. The workspace now follows Orbit Search Web's navy `#060D1D` surfaces, cyan/blue/violet spectrum, MuseoSans fonts, and actual Orbit wordmark. Functional People/Browser tabs, source disclosures, keyboard navigation, and a branded recovery page replace the earlier green theme.
+
+The release audit identified that branding alone did not fulfill adding Orbit to the BELL stack. Added real v3 search, asynchronous status and profile-read tools. The client follows the published OpenAPI contract, including quick/partial/full depths, credential isolation, bounded retries and response size, stable idempotency receipts, terminal caching, credit-error handling, and Retry-After cooldown across tool calls. Messaging senders cannot borrow the web operator's Orbit key.
+
+A real-model web conversation called `orbit_search` and `orbit_profile`, returned Linus Benedict Torvalds with source evidence, rendered the actual profile in the People panel, and produced a cited brief. A 390px viewport measured a 390px document width with the real profile visible. People/Browser arrow-key switching and source expansion were checked in the in-app browser. No illustrative profiles or simulated provider results were used for that live proof.
+
+The full production hill climb now optionally includes a fifth Orbit scenario with a one-result quick public-figure search and one profile read, enabled by `BELLO_LIVE_ORBIT=1`. This uses the configured Orbit account's credits. The report retains aggregate counts and timings, without raw profile data or keys.
+
+Expanded local regression suite: 380 passed, 60 optional provider/database tests skipped; types, lint, and the full prepared production build passed. The Orbit-specific tests cover response validation, safe source evidence, idempotency and replay, Retry-After across tool calls, terminal caching, and messaging isolation. Final publication evidence is recorded on the release PR and in the revision-labelled local quality reports.

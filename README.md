@@ -1,6 +1,6 @@
 # BELLO
 
-**O stands for Orbit.** A personal assistant workspace for developers, forked from [Browserbase's BELL](https://github.com/browserbase/bell-stack).
+**Browserbase · Eve · Link · Linq · Orbit.** BELLO adds Orbit people intelligence to [Browserbase's BELL](https://github.com/browserbase/bell-stack), in a workspace styled to match Orbit.
 
 <p align="center"><img width="96" height="96" alt="BELLO Orbit mark" src="app/icon.svg" /></p>
 
@@ -17,7 +17,7 @@ pnpm install --frozen-lockfile
 cp .env.example .env.local
 ```
 
-Set `OPENAI_API_KEY` in `.env.local`. Choose your browser:
+Set `OPENAI_API_KEY` and `ORBIT_API_KEY` in `.env.local`. The Orbit key needs `search:read` and `profile:read`; create one in the [developer dashboard](https://developer.orbitsearch.com/dashboard/keys). Keys stay on the server. Browser-only tasks can run without an Orbit key. Choose your browser:
 
 - **Local:** set `STAGEHAND_BROWSER=local`. No Browserbase key is needed.
 - **Hosted:** set `STAGEHAND_BROWSER=browserbase` and `BROWSERBASE_API_KEY`. Hosted sessions use managed proxies and Verified Browsers.
@@ -71,10 +71,23 @@ Follow the [hill-climb scorecard](docs/quality/hill-climb.md): find the weakest 
 
 CI's compile-only artifacts need a full `pnpm build` before serving local traffic. Provider-backed checks are [explicit opt-ins](docs/provider-tests.md); skipped tests remain unverified.
 
+## Orbit people intelligence
+
+Ask BELLO to find a person, prepare for a meeting, or understand someone’s work. The People panel shows actual Orbit profiles and supporting sources. `orbit_search` starts a bounded v3 search; `orbit_search_status` resumes it; `orbit_profile` reads deeper public sections. Running searches keep their request IDs across retries, terminal results are cached, and credit/auth failures stop without replacement searches. The operator’s Orbit key is unavailable to messaging senders.
+
+For the complete live hill climb, including a bounded one-person public-figure search and profile read:
+
+```sh
+BELLO_LIVE_EVAL=1 BELLO_LIVE_ORBIT=1 pnpm eval:local
+```
+
+This uses the configured Orbit credits and model API. See [Orbit setup and behavior](docs/orbit.md).
+
 ## Extend BELLO
 
 | Integration | Purpose | Guide |
 | --- | --- | --- |
+| Orbit | People search, public profile context, sources | [Orbit intelligence](docs/orbit.md) |
 | Browserbase + Stagehand | Browsing, saved Contexts, screenshots, human handoff | [Browser runtime](docs/browser-runtime.md) |
 | Eve by Vercel | Agent, tools, conversation state, channels | [Repository map](docs/repository.md) |
 | Linq | iMessage / SMS with signed webhooks and a sender allowlist | [Messaging](docs/linq.md) |

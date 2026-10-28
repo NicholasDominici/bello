@@ -7,10 +7,13 @@ import { useEffect, useRef, useState } from "react";
 import { browserPreview } from "./projection";
 import Message from "./message";
 import { requestErrorMessage } from "./request-error";
+import { orbitPreview } from "./orbit-projection";
+import People, { OrbitScene } from "./people";
 
 export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoUrl: string }) {
   const router = useRouter();
   const [input, setInput] = useState("");
+  const [workspaceTab, setWorkspaceTab] = useState<"people" | "browser" | null>(null);
   const [error, setError] = useState("");
   const [retiring, setRetiring] = useState(false);
   const [stopping, setStopping] = useState(false);
@@ -39,6 +42,9 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
   const stopped = agent.events.findLast(event =>
     ["turn.started", "turn.completed", "turn.cancelled"].includes(event.type))?.type === "turn.cancelled";
   const preview = browserPreview(agent.events);
+  const orbit = orbitPreview(agent.events);
+  const selectedTab = workspaceTab ?? orbit.latestArtifact;
+  const hasMessages = agent.data.messages.some(message => message.role === "user");
   const pending = agent.data.messages
     .flatMap((message) => message.parts)
     .flatMap((part) => {
@@ -49,6 +55,7 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
   async function send(text: string) {
     if (!text.trim() || waiting) return;
     setError("");
+    setWorkspaceTab(null);
     submissionFailed.current = false;
     followLatest.current = true;
     try {
@@ -83,6 +90,7 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
         await new Client({ host: "" }).sessions.attach(agent.session.sessionId).reset();
       followLatest.current = true;
       agent.reset();
+      setWorkspaceTab(null);
       setInput("");
       router.push("/");
     } catch {
@@ -94,36 +102,19 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
   return (
     <main id="main-content">
       <a className="skip-link" href="#message">Skip to message</a>
-      <header>
-        <div>
-          <p className="eyebrow">ORBIT / PERSONAL ASSISTANT</p>
-          <h1>
-            BELL<span>O</span>
-          </h1>
+      <header className="app-header">
+        <div className="brand"><div className="brand-symbol" aria-hidden="true">◎</div><div><h1>BELL<span>O</span></h1><p>YOUR ASSISTANT, IN ORBIT</p></div></div>
+        <div className="header-actions"><a className="orbit-brand" href="https://orbitsearch.com" target="_blank" rel="noreferrer"><span>Powered by</span><Image src="/orbit-wordmark.svg" width={49} height={21} alt="Orbit" /></a>
+          <button className="new-chat" disabled={waiting} onClick={() => void newConversation()}>＋ New conversation</button>
         </div>
-        <button
-          className="new-chat"
-          disabled={waiting}
-          onClick={() => void newConversation()}
-        >
-          New conversation
-        </button>
       </header>
       <section className="workspace">
         <div className="conversation">
-          <h2>Ask. Browse. Verify.</h2>
-          <p className="muted">Give your assistant a task. Follow the work in its own persistent browser.</p>
-          <button
-            className="starter"
-            disabled={waiting}
-            onClick={() =>
-              void send(
-                `Open ${demoUrl} with run, describe what the page shows, then take a screenshot.`,
-              )
-            }
-          >
-            Open demo site ↗
-          </button>
+          <div className="panel-label"><span>CONVERSATION</span><span className={`connection-state ${waiting ? "is-working" : ""}`}><i aria-hidden="true" />{waiting ? "In progress" : "Your workspace"}</span></div>
+          {!hasMessages && <div className="conversation-intro"><p className="eyebrow">A LITTLE MORE CONTEXT</p><h2>Make your<br /><span>next move.</span></h2><p className="muted">Find people with Orbit. Explore the web.<br />Get things done with context.</p>
+            <div className="starters"><button className="starter" disabled={waiting} onClick={() => { setInput("Find a person who "); document.getElementById("message")?.focus(); }}>◎ Find a person <span>↗</span></button>
+              <button className="starter" disabled={waiting} onClick={() => void send(`Open ${demoUrl} with run, describe what the page shows, then take a screenshot.`)}>↗ Explore a website</button></div>
+          </div>}
           <div
             className="messages"
             ref={messagesElement}
@@ -188,7 +179,7 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
               )}
             </fieldset>
           ))}
-          <form
+          <form className="composer"
             onSubmit={(event) => {
               event.preventDefault();
               void send(input);
@@ -199,7 +190,7 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
               id="message"
               value={input}
               onChange={(event) => setInput(event.target.value)}
-              placeholder="Research a topic, compare options, or work through a task…"
+              placeholder="Who are you looking for? What’s next?"
               disabled={waiting}
               aria-describedby="composer-help"
               onKeyDown={(event) => {
@@ -226,36 +217,22 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
             </div>
           </form>
         </div>
-        <aside aria-label="Browser workspace">
-          <div className="browser-bar">
-            <span>Browser capture</span>
-            <span>
-              {preview.httpStatus
-                ? `HTTP ${preview.httpStatus}`
-                : preview.url
-                  ? "Status unavailable"
-                  : "Waiting"}
-            </span>
-          </div>
-          <p className="address">{preview.url ?? "Your browser will appear here"}</p>
-          {preview.screenshot ? (
-            <Image
-              src={preview.screenshot}
-              width={1360}
-              height={900}
-              unoptimized
-              alt="Latest browser screenshot"
-            />
-          ) : (
-            <div className="empty">
-              <span className="orbit-mark" aria-hidden="true">◎</span>
-              <p>A window into the work.</p>
-              <small>Ask for a screenshot after a browser action.</small>
-            </div>
-          )}
-          <p className="footnote">
-            Screenshots update on request. This panel is a capture, not an interactive browser.
-          </p>
+        <aside aria-label="Research workspace">
+          <div className="workspace-toolbar"><div className="workspace-tabs" role="tablist" aria-label="Workspace view" onKeyDown={(event) => {
+            if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+            event.preventDefault();
+            const next = event.key === "Home" ? "browser" : event.key === "End" ? "people" : selectedTab === "browser" ? "people" : "browser";
+            setWorkspaceTab(next);
+            document.getElementById(`${next}-tab`)?.focus();
+          }}>
+            <button id="browser-tab" role="tab" tabIndex={selectedTab === "browser" ? 0 : -1} aria-selected={selectedTab === "browser"} aria-controls="browser-panel" onClick={() => setWorkspaceTab("browser")}>Browser</button>
+            <button id="people-tab" role="tab" tabIndex={selectedTab === "people" ? 0 : -1} aria-selected={selectedTab === "people"} aria-controls="people-panel" onClick={() => setWorkspaceTab("people")}>People {orbit.people.length > 0 && <span>{orbit.people.length}</span>}</button>
+          </div><span className="workspace-label">YOUR ORBIT</span></div>
+          {selectedTab === "people" ? <div id="people-panel" role="tabpanel" aria-labelledby="people-tab"><People people={orbit.people} search={orbit.search} error={orbit.error}/></div> : <div id="browser-panel" role="tabpanel" aria-labelledby="browser-tab">
+            <div className="browser-bar"><span className="window-dots" aria-hidden="true"><i/><i/><i/></span><span className="address">{preview.url ?? "A window into the work"}</span><span>{preview.httpStatus ? `HTTP ${preview.httpStatus}` : preview.url ? "Captured" : "Waiting"}</span></div>
+            {preview.screenshot ? <Image src={preview.screenshot} width={1360} height={900} unoptimized alt="Latest browser screenshot"/> : <div className="empty"><OrbitScene/><h3>See the bigger picture.</h3><p>When BELLO explores the web,<br />you’ll see the work right here.</p><span className="empty-note">Your own browser. One continuous conversation.</span></div>}
+            <p className="footnote">Screenshots update on request. This panel is a capture, not an interactive browser.</p>
+          </div>}
         </aside>
       </section>
     </main>

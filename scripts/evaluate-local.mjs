@@ -22,8 +22,10 @@ const client = new Client({
   } : {}),
   redirect: "error",
 });
+const includeOrbit = process.env.BELLO_LIVE_ORBIT === "1";
+const expectedChecks = includeOrbit ? 5 : 4;
 const report = {
-  version: 1, suite: "live-local", fixture: "company-form-v1",
+  version: 1, suite: "live-local", fixture: includeOrbit ? "company-form-v1+orbit-v3" : "company-form-v1",
   revision: execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
   dirty: Boolean(execFileSync("git", ["status", "--porcelain"], { encoding: "utf8" }).trim()),
   buildId: readFileSync(".next/BUILD_ID", "utf8").trim(),
@@ -143,6 +145,22 @@ try {
     assert.ok(snapshots(reopened.events).some(snapshot => snapshot?.url === "about:blank"), "Cancellation must close the old browser; the next snapshot must open a fresh blank browser.");
     assert.ok(starts(reopened.events) >= 1);
   });
+  if (includeOrbit) await check(stage = "Orbit people intelligence", async () => {
+    const result = await (await session.send(
+      "Bounded Orbit integration test: use orbit_search once for Linus Torvalds, limit 1, profile_depth quick, candidate_discovery false, new_search false. If running, wait poll_after_ms and use orbit_search_status until terminal. Read the ready matching profile with orbit_profile once. Give a short factual brief with a supporting source link. Use only the Orbit tools, and do not browse, enrich explicitly, message, pay, use vaults or start replacement searches.",
+      { signal: AbortSignal.timeout(90_000) },
+    )).result();
+    assert.equal(result.status, "waiting");
+    const outputs = toolResults(result.events).map(result => result.output);
+    const search = outputs.findLast(output => output?.provider === "orbit" && output.operation === "search");
+    const profile = outputs.find(output => output?.provider === "orbit" && output.operation === "profile");
+    assert.ok(search && ["completed", "completed_with_errors"].includes(search.status));
+    assert.ok(search.people?.some(person => person.status === "ready" && /Linus.*Torvalds/i.test(person.name)));
+    assert.ok(profile?.person?.sources?.length > 0 && /Linus.*Torvalds/i.test(profile.person.name) && profile.person.bio?.includes("Linux"));
+    assert.ok(result.message?.includes("https://"));
+    assert.equal(outputs.filter(output => output?.provider === "orbit" && output.operation === "error").length, 0);
+    report.orbit = { readyResults: search.people.filter(person => person.status === "ready").length, sources: profile.person.sources.length, profileRead: true };
+  });
   await check(stage = "session retirement", async () => {
     assert.equal((await session.reset({ signal: AbortSignal.timeout(15_000) })).status, "reset");
     const deadline = Date.now() + 15_000;
@@ -174,9 +192,9 @@ try {
   fixture.closeAllConnections();
   await new Promise(resolve => fixture.close(resolve));
   report.status = "completed";
-  report.passed = !failed && report.results.length === 4 && report.results.every(result => result.passed);
+  report.passed = !failed && report.results.length === expectedChecks && report.results.every(result => result.passed);
   save();
   writeFileSync(`${directory}/runs/${report.startedAt.replaceAll(":", "-")}-live-local.json`, `${JSON.stringify(report, null, 2)}\n`, { mode: 0o600 });
-  console.log(`Live local scenarios: ${report.results.filter(result => result.passed).length}/4 passed. Report: .bell/quality/live-local-latest.json`);
+  console.log(`Live local scenarios: ${report.results.filter(result => result.passed).length}/${expectedChecks} passed. Report: .bell/quality/live-local-latest.json`);
   process.exitCode = report.passed ? 0 : 1;
 }
