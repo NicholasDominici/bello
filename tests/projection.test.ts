@@ -6,6 +6,19 @@ const event = (output: unknown, isError = false) => ({
   data: { result: { kind: "tool-result", output, isError } },
 });
 describe("shared browser output in the BELLO panel", () => {
+  it.each(["turn.cancelled", "session.completed", "session.failed"])("clears retired browser captures on %s", type => {
+    expect(browserPreview([
+      event({ url: "https://shop.example/", httpStatus: 200, screenshot: "data:image/png;base64,aA==" }),
+      { type },
+      event({ url: "https://shop.example/late", screenshot: "data:image/png;base64,bA==" }),
+    ])).toEqual({ url: undefined, screenshot: undefined, httpStatus: undefined });
+  });
+  it("allows a fresh browser capture after the next turn starts", () => {
+    expect(browserPreview([
+      { type: "turn.cancelled" }, { type: "turn.started" },
+      event({ url: "https://example.com/", screenshot: "data:image/png;base64,bA==" }),
+    ]).screenshot).toBe("data:image/png;base64,bA==");
+  });
   it("reads the browser runtime's nested screenshot", () => {
     expect(
       browserPreview([

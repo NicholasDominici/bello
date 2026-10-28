@@ -492,8 +492,12 @@ export class BrowserSession {
     const browser = this.browser;
     this.stagehand = undefined;
     this.browser = undefined;
-    await stagehand?.close().catch(() => undefined);
-    await browser?.close().catch(() => undefined);
+    // Interrupt the transport even when Stagehand is waiting for an active batch.
+    // Serial shutdown can otherwise leave cancellation blocked on that same batch.
+    await Promise.all([
+      stagehand?.close().catch(() => undefined),
+      browser?.close().catch(() => undefined),
+    ]);
     await this.releaseRemoteSession();
     if (this.state.browser.status !== "error") this.state.browser.status = "idle";
   }

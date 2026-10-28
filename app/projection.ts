@@ -2,6 +2,7 @@ export function browserPreview(events: readonly unknown[]) {
   let screenshot: string | undefined;
   let url: string | undefined;
   let httpStatus: number | undefined;
+  let retired = false;
   for (const value of events) {
     if (!value || typeof value !== "object") continue;
     const event = value as {
@@ -10,6 +11,15 @@ export function browserPreview(events: readonly unknown[]) {
         result?: { kind?: string; toolName?: string; isError?: boolean; output?: unknown };
       };
     };
+    if (["turn.cancelled", "session.completed", "session.failed"].includes(event.type ?? "")) {
+      screenshot = undefined;
+      url = undefined;
+      httpStatus = undefined;
+      retired = true;
+      continue;
+    }
+    if (event.type === "turn.started") retired = false;
+    if (retired) continue;
     const result = event.data?.result;
     if (
       event.type !== "action.result" ||

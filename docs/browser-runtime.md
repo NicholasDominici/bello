@@ -1,32 +1,32 @@
 # Browser runtime
 
-Bell's Eve by Vercel agent owns conversation history and tool execution. Browser tools share one in-process
+BELLO's Eve by Vercel agent owns conversation history and tool execution. Browser tools share one in-process
 Stagehand runtime per Eve session. Follow-up turns reuse the browser; saved Browserbase session
 metadata supports reconnecting after a worker restart. Hosted launches request managed proxies,
 Verified Browsers, and keep-alive on every attempt, including retries.
 
 `snapshot` reads page text and short-lived targets, `run` performs typed browser actions, and
-`screenshot` captures the page for Bell's viewer. Navigation accepts HTTP and HTTPS URLs without
+`screenshot` captures the page for BELLO's viewer. Navigation accepts HTTP and HTTPS URLs without
 embedded credentials. A destination URL cannot change the browser provider. Local fixtures
 require `STAGEHAND_BROWSER=local`.
 
 ## Configuration
 
-Copy the root [`.env.example`](../.env.example) for Bell and integration settings.
+Copy the root [`.env.example`](../.env.example) for BELLO and integration settings.
 Hosted browser sessions always disable network logging and recording.
 
 | Variable | Purpose |
 | --- | --- |
 | `STAGEHAND_BROWSER` | `browserbase`, `local`, or `auto`; `auto` uses Browserbase when its API key is present. |
 | `BROWSERBASE_CONTEXT_ID` | Optional existing Context for saved browser state. |
-| `BELL_PUBLIC_URL` | Reachable HTTPS Bell origin for handoff links; loopback HTTP is allowed locally. |
+| `BELL_PUBLIC_URL` | Reachable HTTPS BELLO origin for handoff links; loopback HTTP is allowed locally. |
 | `BELL_HANDOFF_SECRET` | Handoff encryption secret, at least 32 bytes. |
 | `BELL_HEADLESS` | Local browser headless mode; defaults to `true`. |
 | `BELL_BROWSER_IDLE_MS` | Browser inactivity timeout; defaults to 30 minutes. |
 | `BELL_CAPTCHA_TIMEOUT_MS` | CAPTCHA wait timeout; defaults to 30 seconds. |
 | `BELL_DRAFT_CONTEXT_TTL_MS` | Unused draft Context lifetime; defaults to seven days. |
 | `BELL_CONTEXT_METADATA_PATH` | Context metadata file; defaults to `.bell/contexts.json`. |
-| `BELL_OPERATOR_USERNAME` / `BELL_OPERATOR_PASSWORD` | Optional HTTP Basic operator credentials for Bell; password must be at least 32 bytes. |
+| `BELL_OPERATOR_USERNAME` / `BELL_OPERATOR_PASSWORD` | Optional HTTP Basic operator credentials for BELLO; password must be at least 32 bytes. |
 | `BELL_ONEPASSWORD_BACKEND` | `sdk` (default) or explicitly selected `cli`; there is no automatic fallback between accounts or backends. |
 | `BELL_VAULT_FILE` | Existing encrypted local vault file; defaults to `.bell/vault.enc.json`. |
 | `BELL_VAULT_MASTER_KEY` | Local vault key: 32 bytes encoded as base64 or 64 hexadecimal characters. |
@@ -54,7 +54,7 @@ backend and configure its account as described below; SDK failures no longer swi
 ## Contexts and storage
 
 Browserbase Contexts preserve cookies and site state; they do not store vault secrets. Hosted
-tasks get a draft Context. Bell's `context_save` tool names and retains it, and `context_list`,
+tasks get a draft Context. BELLO's `context_save` tool names and retains it, and `context_list`,
 `context_create`, and `context_select` manage saved browser identities. Select a separate Context
 for each identity or work boundary.
 
@@ -100,10 +100,10 @@ submission, including an OTP step after navigation. Credential selectors must ta
 iframe and XPath selectors are rejected. A success selector is required to verify login.
 Persisted sessions with unverified logging settings are replaced before automation resumes.
 TOTP values resolve server-side. When a login needs an unavailable OTP, passkey, or human approval,
-use `human_handoff`, complete the challenge in Live View, and reply in the original Bell conversation.
+use `human_handoff`, complete the challenge in Live View, and reply in the original BELLO conversation.
 
 Handoff links expire after ten minutes by default and are not single-use. Expiry prevents opening
 the link again; it does not revoke a Browserbase Live View already opened. That view can remain
 usable until the browser session ends. Keep both URLs private and close the conversation when done.
-The reachable Bell origin and handoff secret must be configured before issuing a link.
+The reachable BELLO origin and handoff secret must be configured before issuing a link.
 See [provider checks](provider-tests.md) for opt-in login and saved-Context regressions.

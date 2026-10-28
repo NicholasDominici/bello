@@ -125,3 +125,23 @@ describe("terminal cleanup in a fresh Eve worker", () => {
       expect(hasBrowserRuntime(id)).toBe(false);
     }));
 });
+
+
+describe("local browser shutdown while a batch is running", () => {
+  it("closes the browser even if Stagehand waits for an in-flight batch to end", async () => {
+    const state: ConversationState = { id: "local-shutdown", traces: [], browser: { provider: "local", status: "active" } };
+    const session = new BrowserSession(state);
+    let unblock!: () => void;
+    const batchFinished = new Promise<void>(resolve => { unblock = resolve; });
+    const stagehandClose = vi.fn(() => batchFinished);
+    const browserClose = vi.fn(async () => { unblock(); });
+    Object.assign(session, { stagehand: { close: stagehandClose }, browser: { close: browserClose } });
+    const closing = session.close();
+    try {
+      await vi.waitFor(() => expect(browserClose).toHaveBeenCalledOnce(), { timeout: 250 });
+      await closing;
+      expect(stagehandClose).toHaveBeenCalledOnce();
+      expect(session.hasStarted()).toBe(false);
+    } finally { unblock(); await closing; }
+  });
+});

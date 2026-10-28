@@ -1,15 +1,15 @@
-# Text Bell through Linq
+# Text BELLO through Linq
 
-Configure Bell with a receiving phone number from your own Linq account.
+Configure BELLO with a receiving phone number from your own Linq account.
 Linq carries iMessage and SMS. [Link by Stripe wallet OAuth and checkout](link.md) use this channel's
 verified sender identity and require separate configuration.
 
 ```text
-Your phone -> Linq -> Bell /eve/v1/linq -> Eve conversation
+Your phone -> Linq -> BELLO /eve/v1/linq -> Eve conversation
                                               |
-                           Bell browser tools + Browserbase browser
+                           BELLO browser tools + Browserbase browser
                                               |
-Your phone <- Linq <- Bell's reply in the original chat
+Your phone <- Linq <- BELLO's reply in the original chat
 ```
 
 One Linq chat keeps one Eve conversation and browser across follow-up messages. It does not
@@ -18,17 +18,17 @@ process. Baselayer credentials are not required for ordinary browsing.
 
 ## Configure the line
 
-Use Bell's deployed HTTPS origin directly. The intended flow is
-`Linq -> Bell -> Browserbase`, with handoff links served by that same Bell origin.
+Use BELLO's deployed HTTPS origin directly. The intended flow is
+`Linq -> BELLO -> Browserbase`, with handoff links served by that same BELLO origin.
 No tunnel process or Cloudflare-specific application setup is required.
 
 Hosted browser launches request `browserSettings: { verified: true }` and managed
 proxies on every attempt. Verified Browsers provide browser identity for websites
-Bell visits. The receiving webhook and handoff pages are served by Bell, so they
+BELLO visits. The receiving webhook and handoff pages are served by BELLO, so they
 still need a reachable HTTPS application host. See
 [Browserbase Verified Browsers](https://www.browserbase.com/verified).
 
-1. In Bell's ignored `.env.local`, set these server-only values:
+1. In BELLO's ignored `.env.local`, set these server-only values:
 
    ```dotenv
    LINQ_API_KEY=<API token for the Linq account that owns the line>
@@ -41,10 +41,10 @@ still need a reachable HTTPS application host. See
    sending number are different settings. An empty or invalid sender list accepts nobody.
    For this single-operator demo, allow only the operator's numbers because saved vault and
    browser Context data are shared. Group chats and iMessage email handles are not supported
-   by this phone-only policy. Bell uses `BELL_LINQ_ALLOWED_SENDERS`; the former
+   by this phone-only policy. BELLO uses `BELL_LINQ_ALLOWED_SENDERS`; the former
    `BELL_LINQ_ALLOWED_USER_IDS` setting has no effect.
 
-2. Deploy Bell behind your chosen HTTPS application origin. Protect the web UI,
+2. Deploy BELLO behind your chosen HTTPS application origin. Protect the web UI,
    session-control routes, and any administration endpoints with application authentication.
    Route Linq requests directly to `/eve/v1/linq`, where Eve verifies the signing secret;
    an interactive login screen must not intercept the webhook. Handoff routes validate
@@ -55,26 +55,26 @@ still need a reachable HTTPS application host. See
 
    | Setting | Value |
    | --- | --- |
-   | Target URL | `https://<your reachable Bell host>/eve/v1/linq?version=2026-02-03` |
+   | Target URL | `https://<your reachable BELLO host>/eve/v1/linq?version=2026-02-03` |
    | Event | `message.received` |
    | Phone-number filter | Your `BELL_LINQ_PHONE_NUMBER` receiving line |
 
-   Save the subscription's signing secret as `LINQ_WEBHOOK_SECRET`, then restart Bell. The target
-   is the Bell application. Best Buy is the website Bell visits, so do not enter it as the webhook
-   URL. The payload version supplies the receiving line and direct/group-chat fields Bell checks.
-   Bell verifies these fields again even when the subscription has a phone-number filter.
+   Save the subscription's signing secret as `LINQ_WEBHOOK_SECRET`, then restart BELLO. The target
+   is the BELLO application. Best Buy is the website BELLO visits, so do not enter it as the webhook
+   URL. The payload version supplies the receiving line and direct/group-chat fields BELLO checks.
+   BELLO verifies these fields again even when the subscription has a phone-number filter.
    Replies use the inbound Linq chat and therefore the same receiving line.
 
    See Linq's [subscription API](https://docs.linqapp.com/channel/imessage/api/resources/webhook_subscriptions/methods/create/)
    and [signed webhook guide](https://docs.linqapp.com/channel/imessage/guides/webhooks/).
 
-4. For optional human handoff, set `BELL_PUBLIC_URL` to Bell's reachable origin and
+4. For optional human handoff, set `BELL_PUBLIC_URL` to BELLO's reachable origin and
    `BELL_HANDOFF_SECRET` to a random secret of at least 32 characters. A localhost handoff
-   link works only on the computer running Bell; a phone needs the deployed HTTPS origin.
+   link works only on the computer running BELLO; a phone needs the deployed HTTPS origin.
    Keep handoff links private: they grant browser control. Token expiry prevents reopening
    the link but does not revoke an already-open Live View; end the browser session when done.
 
-5. Use persistent storage for Bell's Context metadata and any existing local vault file on a single-instance
+5. Use persistent storage for BELLO's Context metadata and any existing local vault file on a single-instance
    host, or configure durable shared storage before a multi-instance/serverless deployment.
    Personal [1Password Agentic Autofill](onepassword.md) is disabled by default pending hosted
    extension support and live verification. Its implementation uses per-sender OAuth and private
@@ -89,7 +89,7 @@ Text your configured Linq line from an allowed personal number:
 2. "Take a screenshot of that page."
 3. "Tell me the current page URL without navigating again."
 
-Bell should visit the site in Browserbase and reply in the same Linq chat. Follow-ups reuse
+BELLO should visit the site in Browserbase and reply in the same Linq chat. Follow-ups reuse
 that chat's browser. Report what the browser actually sees; merchant pages can vary by region
 or present a challenge. This demo does not log in, add items to a cart, or purchase anything.
 

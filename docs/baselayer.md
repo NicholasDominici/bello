@@ -1,17 +1,17 @@
 # Baselayer merchant access
 
-Bell's `merchant_access` tool mints an L2 credential and presents it to a compatible merchant
+BELLO's `merchant_access` tool mints an L2 credential and presents it to a compatible merchant
 inside the conversation's existing Browserbase browser. The same tool is available from the
 web interface and a Linq chat. Each conversation keeps its own browser.
 
 ```text
-Bell -> merchant KYA profile -> Baselayer mint -> merchant nonce
+BELLO -> merchant KYA profile -> Baselayer mint -> merchant nonce
      -> signed proof on one browser GET -> merchant verification -> access result
 ```
 
 ## Configure the sandbox
 
-Set these values in Bell's ignored `.env.local`:
+Set these values in BELLO's ignored `.env.local`:
 
 ```dotenv
 BASELAYER_API_KEY=<sandbox API key>
@@ -21,8 +21,8 @@ BELL_DEMO_URL=https://bell-stack-demo-site.vercel.app/protected
 STAGEHAND_BROWSER=browserbase
 ```
 
-Keep the OpenAI and Browserbase credentials already used by Bell. For the phone demo, also keep
-the Linq configuration from [the messaging guide](linq.md). Restart Bell and start a new
+Keep the OpenAI and Browserbase credentials already used by BELLO. For the phone demo, also keep
+the Linq configuration from [the messaging guide](linq.md). Restart BELLO and start a new
 conversation after changing browser logging settings. The browser runtime refuses credential
 presentation if the browser session started with logging enabled.
 
@@ -80,7 +80,7 @@ the agent integration; the merchant verifier is deployed separately.
 
 Best Buy remains an ordinary browsing example. Do not add it to the credential flow until its
 Baselayer merchant support and required scope are confirmed. Changing a webhook target to Best
-Buy does not configure merchant verification; Linq webhooks still point to Bell.
+Buy does not configure merchant verification; Linq webhooks still point to BELLO.
 
 ## Troubleshooting and verification limits
 

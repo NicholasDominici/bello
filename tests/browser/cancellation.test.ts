@@ -1,8 +1,22 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { describe, expect, it, vi } from "vitest";
 
 import { BrowserCancellationError, runWithCancellation } from "../../agent/lib/cancellation";
 
 describe("browser operation cancellation", () => {
+  it("runs cleanup in the tool's context when a separate request delivers the abort", async () => {
+    const storage = new AsyncLocalStorage<string>();
+    const controller = new AbortController();
+    let cleanupOwner: string | undefined;
+    const pending = storage.run("owning-tool", () => runWithCancellation(
+      controller.signal,
+      () => new Promise<void>(() => undefined),
+      async () => { cleanupOwner = storage.getStore(); },
+    ));
+    controller.abort();
+    await expect(pending).rejects.toBeInstanceOf(BrowserCancellationError);
+    expect(cleanupOwner).toBe("owning-tool");
+  });
   it("does not start queued work after cancellation cleanup", async () => {
     const controller = new AbortController(), operation = vi.fn(), cleanup = vi.fn(async () => undefined);
     const pending = runWithCancellation(controller.signal, operation, cleanup);

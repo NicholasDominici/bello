@@ -1,4 +1,4 @@
-# Personal 1Password through Bell
+# Personal 1Password through BELLO
 
 This integration connects an allowlisted private Linq sender to their personal 1Password account. It uses Agentic Autofill in the 1Password browser extension. The operator SDK/CLI vault tools remain separate and are unavailable to Linq senders.
 
@@ -6,7 +6,7 @@ This integration connects an allowlisted private Linq sender to their personal 1
 
 Keep `ONEPASSWORD_ENABLED=false` (the default) and `BROWSERBASE_1PASSWORD_EXTENSION_ID` unset. Saved OAuth client settings alone do not enable personal connections. Connect and login tools stop before requesting authorization, the connection-start endpoint returns HTTP 503, and status reports `disabled`. Ordinary browsing keeps its existing Stagehand extension. Existing callback completion and disconnect remain available for recovery; disabling new connections does not erase credentials or weaken the private-browser guards.
 
-The hosted check on October 25, 2026 verified the official 1Password Nightly extension 8.12.46.17 initializes and enables Agentic Mode in Browserbase by itself. Bell's Stagehand 4.3.0 launch fails with the same upload: supplying `extensionId` suppresses Stagehand's runtime upload, so attachment fails with `Stagehand extension is not installed in the connected browser`. Local Chrome can load both extensions, but that does not verify the hosted launch path. The [multi-extension platform proposal](https://github.com/browserbase/core/pull/10559) was closed without merging.
+The hosted check on October 25, 2026 verified the official 1Password Nightly extension 8.12.46.17 initializes and enables Agentic Mode in Browserbase by itself. BELLO's Stagehand 4.3.0 launch fails with the same upload: supplying `extensionId` suppresses Stagehand's runtime upload, so attachment fails with `Stagehand extension is not installed in the connected browser`. Local Chrome can load both extensions, but that does not verify the hosted launch path. The [multi-extension platform proposal](https://github.com/browserbase/core/pull/10559) was closed without merging.
 
 Run `pnpm repro:stagehand-extensions` with a Browserbase API key and optional project ID to reproduce the problem using a disposable synthetic extension. The `zip` command must be installed. It compares Stagehand alone, the custom extension alone, and Stagehand with that extension; it never needs OAuth or vault credentials. The script creates short-lived sessions with recording/logging disabled, releases them, and deletes its uploaded extension. A nonzero exit reports a failed case.
 
@@ -14,7 +14,7 @@ Before changing the flag to `true`, the platform and SDK must support loading bo
 
 ## Deployment setup
 
-1. Apply `migrations/002_onepassword.sql` to Bell's PostgreSQL database. Use a direct or session-pooled connection: transaction-pooling proxies do not preserve the session advisory locks used for token rotation and browser operations.
+1. Apply `migrations/002_onepassword.sql` to BELLO's PostgreSQL database. Use a direct or session-pooled connection: transaction-pooling proxies do not preserve the session advisory locks used for token rotation and browser operations.
 2. Configure these server-only settings on every instance:
 
    | Setting | Purpose |
@@ -33,27 +33,27 @@ Before changing the flag to `true`, the platform and SDK must support loading bo
 3. Register the OAuth client through a 1Password Business account. The connecting test user needs a separate US Individual or Families account and the supported desktop app/extension. Follow the current [Browserbase setup guide](https://docs.browserbase.com/integrations/1password/agentic-autofill) for partner access and extension packaging. A regular service-account token is not a replacement for this client or extension.
 4. Keep the public callback and `/eve/v1/connections/.../callback/...` paths reachable through Vercel protection without adding query parameters to the registered redirect. The callbacks use server-issued, short-lived capabilities; do not make unrelated application routes public.
 5. Keep Linq signature verification, receiving-line configuration, and the sender allowlist enabled. Groups are deliberately rejected. The web operator login does not establish an individual iMessage identity and cannot select someone else's personal account.
-6. Start new conversations for the rollout. Remove `BROWSERBASE_CONTEXT_ID` when personal-browser mode is enabled. Bell disables reusable Context creation, selection, saving, and cookie export in this mode. Existing contexts are not deleted, and their cookies are not migrated into personal sessions. Disable the old `ONEPASSWORD_OAUTH_STATE_SECRET`; the new record encryption key replaces its use.
+6. Start new conversations for the rollout. Remove `BROWSERBASE_CONTEXT_ID` when personal-browser mode is enabled. BELLO disables reusable Context creation, selection, saving, and cookie export in this mode. Existing contexts are not deleted, and their cookies are not migrated into personal sessions. Disable the old `ONEPASSWORD_OAUTH_STATE_SECRET`; the new record encryption key replaces its use.
 
-Setting the extension upload ID changes browser launch configuration. Stagehand 4 also needs its own extension. Bell requires Stagehand initialization and the 1Password runtime API to succeed in the same session; failures stop the operation and do not fall back to reading passwords through the SDK. The local synthetic test verifies coexistence in Chrome. Verify the actual hosted extension combination before enabling this on a public deployment; an upload ID alone is not proof of compatibility.
+Setting the extension upload ID changes browser launch configuration. Stagehand 4 also needs its own extension. BELLO requires Stagehand initialization and the 1Password runtime API to succeed in the same session; failures stop the operation and do not fall back to reading passwords through the SDK. The local synthetic test verifies coexistence in Chrome. Verify the actual hosted extension combination before enabling this on a public deployment; an upload ID alone is not proof of compatibility.
 
 ## User flow
 
-- Ask Bell to connect 1Password. Eve sends the consent link to the authenticated private conversation and resumes that conversation after the callback.
-- Ask Bell to sign in, supplying the exact HTTPS login page and the expected success page on the same origin. Bell opens the login page in the conversation's browser and sends a private approval-page link.
-- Open that page on the computer running the 1Password desktop app, then open and approve the requested login. The page checks approval for up to two minutes. Afterward, the user can request one more check. A request that remains pending after that check ends; ask Bell for a new login request.
-- Bell matches the approved entry ID, fills through the extension, checks the destination's origin and path, and continues using that same browser.
-- Ask Bell to disconnect 1Password to revoke the entire connection. This requires Eve confirmation. Failed revocation blocks credential use while retaining the encrypted credentials for retry.
+- Ask BELLO to connect 1Password. Eve sends the consent link to the authenticated private conversation and resumes that conversation after the callback.
+- Ask BELLO to sign in, supplying the exact HTTPS login page and the expected success page on the same origin. BELLO opens the login page in the conversation's browser and sends a private approval-page link.
+- Open that page on the computer running the 1Password desktop app, then open and approve the requested login. The page checks approval for up to two minutes. Afterward, the user can request one more check. A request that remains pending after that check ends; ask BELLO for a new login request.
+- BELLO matches the approved entry ID, fills through the extension, checks the destination's origin and path, and continues using that same browser.
+- Ask BELLO to disconnect 1Password to revoke the entire connection. This requires Eve confirmation. Failed revocation blocks credential use while retaining the encrypted credentials for retry.
 
 The first implementation handles a single login per request and one pending request per sender. Multi-page sign-in, OTP, passkeys, and a persistent library of reusable grants are not implemented. An unexpected destination or failed fill closes and blocks the browser; start a new conversation. Reaching the expected URL is not an independent proof of account identity or authorization on the destination website.
 
 ## Ownership and recovery
 
-The connection owner comes from Eve's signature-verified Linq principal, never a model argument or caller-supplied phone number. AES-GCM binds the encrypted record to that owner. The integration key is validated against the OAuth client, API host, account, and user path. A reconnect with an omitted key preserves the stored key and requires matching provider user identity. If identity cannot be established, Bell refuses to activate the connection.
+The connection owner comes from Eve's signature-verified Linq principal, never a model argument or caller-supplied phone number. AES-GCM binds the encrypted record to that owner. The integration key is validated against the OAuth client, API host, account, and user path. A reconnect with an omitted key preserves the stored key and requires matching provider user identity. If identity cannot be established, BELLO refuses to activate the connection.
 
 The callback captures the integration key from the fragment, posts it through a same-origin, browser-bound endpoint, saves it before code exchange, and clears the browser URL. Nothing stores the key in localStorage, sessionStorage, model output, or an environment variable. See [1Password's storage contract](https://www.1password.dev/agentic-autofill/partners/keys-and-tokens).
 
-Refreshes are serialized across processes. Bell commits a blocked state before sending a single-use code or refresh token. If a response or final database acknowledgment is lost, Bell requires recovery rather than retrying an ambiguously consumed token. A failed exchange retains the captured key. A missing key requires disconnecting and reconnecting; an account switch requires disconnecting the existing connection first.
+Refreshes are serialized across processes. BELLO commits a blocked state before sending a single-use code or refresh token. If a response or final database acknowledgment is lost, BELLO requires recovery rather than retrying an ambiguously consumed token. A failed exchange retains the captured key. A missing key requires disconnecting and reconnecting; an account switch requires disconnecting the existing connection first.
 
 Browser operations are serialized across workers while personal mode is enabled. A committed guard blocks subsequent operations if a fill is interrupted. Only a verified successful fill clears the guard. Logging and recording remain disabled. Access tokens and integration keys reach only the extension worker in memory; refresh tokens and client secrets remain on the server. Close the browser when the task ends. Human Live View still grants control to whoever holds its link, so keep it private.
 

@@ -7,7 +7,7 @@ Browserbase must use `verified: true` and managed proxies, including after launc
 ## 1Password login and OTP
 
 Use a dedicated test vault with a Login item titled exactly
-`Bell integration test (authenticationtest.com)`. Give it the website
+`BELLO integration test (authenticationtest.com)`. Give it the website
 `https://authenticationtest.com` and the public test username, password, and OTP seed shown
 on [the test site's TOTP challenge](https://authenticationtest.com/totpChallenge/).
 Do not point the test at a personal or production login.
@@ -36,3 +36,20 @@ BELL_LIVE_CONTEXT=1 STAGEHAND_BROWSER=browserbase pnpm exec vitest run tests/bro
 This writes a synthetic example.com cookie, releases the writer, starts a reader with the
 same Context, and checks the restored cookie. It then releases both browsers and deletes the
 temporary Context. Cleanup failures must fail the check rather than silently leaving resources.
+
+## Synthetic local agent evaluation
+
+Run a complete `pnpm build`, configure a private local operator for production, and start
+`STAGEHAND_BROWSER=local pnpm start`. Then run:
+
+```sh
+BELLO_LIVE_EVAL=1 pnpm eval:local
+```
+
+This uses the configured model API. It creates a temporary loopback fixture and one conversation,
+checks observed page content and screenshots, ignores an injected page instruction, verifies a
+real synthetic form receipt and browser reuse, cancels an in-flight wait in under five seconds,
+opens a fresh blank browser, and terminally resets the session. No real accounts, messages, purchases,
+or saved Contexts are used. If cleanup fails, the command fails; retire that evaluation conversation
+before continuing. Reports under `.bell/quality/` contain outcomes and timing without raw session
+identifiers, browser captures, or model output.

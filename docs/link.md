@@ -10,13 +10,13 @@ Run a single long-lived Eve process with `LINK_SANDBOX=1`. Inject
 verified operator's Linq principal (`linq:<sender_handle.id>` from the signed Linq event,
 not a phone number). Keep the Linq receiving-number and sender allowlist checks enabled.
 The token is obtained through the operator's Link application and is never requested in chat.
-Bell does not write it to a file, database, workflow state, or model output. Do not save it in
+BELLO does not write it to a file, database, workflow state, or model output. Do not save it in
 `.env` or commit it. No `DATABASE_URL`, migrations, OAuth client, or encryption key is needed
 for this sandbox path. Other sender identities and the anonymous web demo cannot use the token.
 
 Every creation is forced to `test: true`; the model cannot enable a real charge. Stripe
 [test requests](https://docs.stripe.com/agentic-commerce/agents/link-agent-wallet/use-link-wallet-pay-online#test-your-integration)
-return test credentials without charging the underlying payment method. Bell uses a fresh
+return test credentials without charging the underlying payment method. BELLO uses a fresh
 process-specific idempotency namespace and only permits requests created by that process.
 Saved wallet profiles, payment methods, shipping addresses, and financial-history tools are
 unavailable. Lists contain only this process's test requests. Approval and private card entry
@@ -28,22 +28,22 @@ and recovered checkout browsers are refused, including when conversations surviv
 handoff to reconcile an existing attempt; do not restart or create another request to retry it.
 This sandbox path is for one long-lived worker, not a multi-instance or serverless deployment.
 It does not refresh or persist the token. Replace an expired token through the operator's Link
-application and restart deliberately; revoke access there when finished. Bell's disconnect
+application and restart deliberately; revoke access there when finished. BELLO's disconnect
 tool does not claim to revoke the externally managed sandbox token.
 
 Conversation history, task state, and non-secret test purchase/status messages still use Eve's
 existing storage. Browserbase logging and recording remain disabled. Link and the test merchant
-retain their own records; Bell's no-wallet-storage rule does not control those applications.
+retain their own records; BELLO's no-wallet-storage rule does not control those applications.
 
 ## Real Link: operator-owned OAuth and storage
 
-Bell connects a wallet to the verified sender of a private Linq message. The user texts Bell,
+BELLO connects a wallet to the verified sender of a private Linq message. The user texts BELLO,
 opens Link's consent page, and returns to the same conversation. Eve suspends and resumes the
-tool call. There is no Bell login, static wallet token, or wallet access from the web demo.
+tool call. There is no BELLO login, static wallet token, or wallet access from the web demo.
 
 This uses the [Link Eve extension](https://eve.dev/integrations/link) and its
 [interactive OAuth contract](https://github.com/stripe/link-cli/tree/main/packages/integrations/eve).
-The Eve catalog's static-token quick start is not Bell's configuration.
+The Eve catalog's static-token quick start is not BELLO's configuration.
 
 ## Configure real Link
 
@@ -77,12 +77,12 @@ The Eve catalog's static-token quick start is not Bell's configuration.
    Apply before accepting Link requests. It is safe to rerun and does not migrate browser data.
    The application needs SELECT/INSERT/UPDATE/DELETE on these tables. Schema management can use
    a separate database role.
-5. Restart Bell. Expose `/api/link/oauth/callback` and Eve's
+5. Restart BELLO. Expose `/api/link/oauth/callback` and Eve's
    `/eve/v1/connections/.../callback/...` routes without an interactive login wall. Opaque OAuth
    state and the framework callback capability protect these routes. Keep the existing web and
-   session-control access restrictions. Bell forwards Eve's callback capability through
+   session-control access restrictions. BELLO forwards Eve's callback capability through
    `BELL_PUBLIC_URL`, even when Eve generated it on an internal development port or a
-   different Vercel project domain. Route that public origin to this same Bell deployment.
+   different Vercel project domain. Route that public origin to this same BELLO deployment.
 
 Configuration and database connections load only when Link is used. Browsing and builds do not
 require these values. Grants request only `payment_methods.agentic` and `userinfo:read`;
@@ -90,17 +90,17 @@ financial-data tools are disabled.
 
 ## Connect and purchase with real Link
 
-Text **“List my Link payment methods.”** Bell sends a private consent link. Complete Link's
+Text **“List my Link payment methods.”** BELLO sends a private consent link. Complete Link's
 authentication and consent within ten minutes. Eve resumes the request in the original chat.
 Keep consent links private: possession allows completing the connection for the requesting
-sender. Denial or expiry ends the attempt; ask Bell for a new link when ready.
+sender. Denial or expiry ends the attempt; ask BELLO for a new link when ready.
 
-For checkout, give Bell the merchant, item, quantity, and budget. Bell confirms the final total,
-including shipping and tax. Eve confirmation and Link approval are both retained. Bell checks
+For checkout, give BELLO the merchant, item, quantity, and budget. BELLO confirms the final total,
+including shipping and tax. Eve confirmation and Link approval are both retained. BELLO checks
 the same request and uses `link__checkout` to retrieve and submit credentials server-side in the
 existing browser. The model receives status metadata, never card numbers, CVCs, or payment tokens.
 Human handoff is reserved for 3DS and other human-only steps. A submission or confirmation element
-is not proof of payment: Bell must verify the merchant receipt/order and Link status before reporting
+is not proof of payment: BELLO must verify the merchant receipt/order and Link status before reporting
 success. An uncertain submission must be reconciled before retrying.
 
 For real Link (`LINK_SANDBOX=0`), apply `migrations/003_link_checkout.sql` before deploying checkout. Browser operations use a
@@ -123,7 +123,7 @@ that clearing inputs cannot erase, so the model cannot read this browser again. 
 screenshots while payment details are visible. Test the actual merchant and credential format in a
 sandbox before enabling production checkout.
 
-Text **“Disconnect my Link wallet.”** After confirmation, Bell blocks token resolution,
+Text **“Disconnect my Link wallet.”** After confirmation, BELLO blocks token resolution,
 invalidates pending consent attempts, and revokes the remote grant before removing its tokens.
 If revocation fails, encrypted tokens remain for retrying disconnect and the wallet stays blocked.
 Disconnect does not cancel orders or merchant subscriptions or undo an already submitted purchase.
@@ -142,12 +142,12 @@ connection replacement, and disconnect per sender. Each native Link request rech
 even when Eve has cached a bearer within the current execution step. Use a direct connection or
 session-mode pooler; transaction-mode poolers are incompatible with these session advisory locks.
 
-Codes and refresh tokens are single use. Bell durably records an exchange as in progress before
+Codes and refresh tokens are single use. BELLO durably records an exchange as in progress before
 sending it. A lost response or process failure can require fresh consent instead of retrying
 the same exchange. A Link 401 invalidates the stored bearer and starts a new consent flow. New
-attempts supersede earlier attempts for that sender. Before requesting new consent, Bell revokes
+attempts supersede earlier attempts for that sender. Before requesting new consent, BELLO revokes
 any previously stored grant so it cannot be left authorized after wallet replacement. After a
-failed refresh, ask Bell to reconnect. If revoking the old grant fails during reconnect or
+failed refresh, ask BELLO to reconnect. If revoking the old grant fails during reconnect or
 disconnect, retry **“Disconnect my Link wallet”** successfully before reconnecting.
 An identical callback can be redelivered if a phone loses the redirect response; a completed
 exchange cannot be repeated and changed callback parameters are rejected.
@@ -174,13 +174,13 @@ DELETE FROM bell_link_oauth_attempts WHERE expires_at < now() - interval '1 day'
 ```
 
 PostgreSQL here stores Link state and browser privacy guards. Eve still needs durable workflow storage to resume
-parked turns after host replacement, and Bell's Context metadata and optional local vault files
-need their documented storage. This change does not make the rest of Bell ready for arbitrary multi-instance hosting
+parked turns after host replacement, and BELLO's Context metadata and optional local vault files
+need their documented storage. This change does not make the rest of BELLO ready for arbitrary multi-instance hosting
 or unrelated users.
 
 ## Transcript boundary
 
-OAuth tokens and client secrets never enter tool arguments or conversational output. Bell
+OAuth tokens and client secrets never enter tool arguments or conversational output. BELLO
 overrides the native extension's credential retrieval: the tool accepts only a spend-request ID,
 and every spend-request result is projected to an explicit metadata allowlist before Eve can
 persist it. Card and payment-token fields, including unexpected provider fields, are discarded.

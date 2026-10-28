@@ -1,3 +1,5 @@
+import { AsyncLocalStorage } from "node:async_hooks";
+
 export class BrowserCancellationError extends Error {
   override readonly name = "AbortError";
 
@@ -27,10 +29,11 @@ export async function runWithCancellation<T>(
 
   let onAbort!: () => void;
   const canceled = new Promise<Outcome<T>>((resolve) => {
-    onAbort = () => {
+    // Abort can arrive from a different HTTP request. Preserve the owning Eve context.
+    onAbort = AsyncLocalStorage.bind(() => {
       const cleanupPromise = cleanup().catch(() => undefined);
       resolve({ kind: "canceled", cleanup: cleanupPromise });
-    };
+    });
     signal.addEventListener("abort", onAbort, { once: true });
   });
   const pending: Promise<Outcome<T>> = Promise.resolve()

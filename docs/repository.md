@@ -1,12 +1,12 @@
-# Bell repository
+# BELLO repository
 
-Bell lives in [browserbase/bell-stack](https://github.com/browserbase/bell-stack).
+BELLO lives in [browserbase/bell-stack](https://github.com/browserbase/bell-stack).
 One Next.js application serves the web interface and integrations. One Eve by Vercel agent owns the web
-and Linq conversations; both channels use Bell's browser runtime directly.
+and Linq conversations; both channels use BELLO's browser runtime directly.
 
 ```text
 agent/                  Eve agent, tools, hooks, runtime, and channels
-app/                    Bell web interface, integration APIs, and handoff routes
+app/                    BELLO web interface, integration APIs, and handoff routes
 server/browser/         Browser sessions, Context metadata, credentials, and handoff
 lib/browser/            Browser URL and CAPTCHA helpers
 tests/browser/          Browser runtime regression tests and local fixtures
@@ -16,19 +16,19 @@ pnpm-lock.yaml          One dependency resolution tree
 
 ## Eve by Vercel
 
-[Eve by Vercel](https://eve.dev/docs) runs Bell's agent, conversation state, tools, and channels.
+[Eve by Vercel](https://eve.dev/docs) runs BELLO's agent, conversation state, tools, and channels.
 Configure the model and session limits in [`agent/agent.ts`](../agent/agent.ts), behavior in
 [`agent/instructions.md`](../agent/instructions.md), and tools in [`agent/tools/`](../agent/tools/).
 The [web channel](../agent/channels/eve.ts) and [Linq channel](../agent/channels/linq.ts) use the
 same agent with separate conversations. [Hooks](../agent/hooks/) maintain task state and browser
-lifecycle; channel callbacks also handle terminal-session cleanup. Restart Bell after runtime edits.
+lifecycle; channel callbacks also handle terminal-session cleanup. Restart BELLO after runtime edits.
 
 ## Integration implementation
 
 | Integration | Implementation | Guide |
 | --- | --- | --- |
 | Browserbase + Stagehand | [Browser runtime](../agent/lib/browser-runtime.ts), [session management](../server/browser/browser-session.ts) | [Browser configuration](browser-runtime.md) |
-| Eve by Vercel | [Agent](../agent/agent.ts), [channels](../agent/channels/), [hooks](../agent/hooks/) | [Eve in Bell](#eve-by-vercel) |
+| Eve by Vercel | [Agent](../agent/agent.ts), [channels](../agent/channels/), [hooks](../agent/hooks/) | [Eve in BELLO](#eve-by-vercel) |
 | Linq | [Channel and sender policy](../agent/channels/linq.ts) | [Messaging setup](linq.md) |
 | Link by Stripe | [Eve extension and tools](../agent/extensions/link/), [authorization](../agent/lib/link-auth.ts), [server implementation](../server/link/) | [Sandbox and wallet setup](link.md) |
 | 1Password | [Operator SDK/CLI access](../server/browser/vault/onepassword.ts), [personal authorization](../agent/lib/onepassword-auth.ts), [personal server implementation](../server/onepassword/) | [Operator credentials](browser-runtime.md#credentials-and-otp), [personal access status](onepassword.md) |
@@ -49,7 +49,7 @@ pnpm dev
 
 `pnpm dev` and `pnpm build` compile the browser runtime directly. There is no separate browser
 package, generated library, or second agent application. Run `pnpm check` for tests, TypeScript,
-lint, and the Bell production build. Provider-backed tests remain opt-in; see
+lint, and the BELLO production build. Provider-backed tests remain opt-in; see
 [provider regression checks](provider-tests.md). Keep generated `.eve`, `.next`, `.output`,
 dependencies, environment files, and browser data untracked.
 
@@ -60,7 +60,7 @@ See [browser configuration and credential handling](browser-runtime.md).
 
 ## License and ownership
 
-Bell maintains its browser implementation directly in this repository. There is no submodule
+BELLO maintains its browser implementation directly in this repository. There is no submodule
 or separately maintained application to install. The root [MIT license](../LICENSE) preserves
 the Browserbase copyright and license terms covering the browser source.
 
@@ -73,7 +73,7 @@ Eve's error logging; failed callbacks are not automatically retried. Starting a 
 resets the prior session and releases its browser. Browserbase sessions still have provider
 lifetimes, so this does not guarantee an indefinitely running browser.
 
-With Bell running locally and its provider credentials loaded, run the opt-in regression:
+With BELLO running locally and its provider credentials loaded, run the opt-in regression:
 
 ```sh
 BELL_LIVE_RETIREMENT=1 pnpm test:retirement:live

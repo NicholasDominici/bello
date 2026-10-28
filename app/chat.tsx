@@ -3,16 +3,26 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEveAgent } from "eve/react";
 import { Client } from "eve/client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { browserPreview } from "./projection";
 import Message from "./message";
+import { requestErrorMessage } from "./request-error";
 
 export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoUrl: string }) {
   const router = useRouter();
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
   const [retiring, setRetiring] = useState(false);
+  const [stopping, setStopping] = useState(false);
+  const [responding, setResponding] = useState<string | null>(null);
+  const submissionFailed = useRef(false);
+  const messagesElement = useRef<HTMLDivElement>(null);
+  const followLatest = useRef(true);
   const agent = useEveAgent({
+    onError(error) {
+      submissionFailed.current = true;
+      setError(requestErrorMessage(error));
+    },
     initialSession: sessionId ? { sessionId, streamIndex: 0 } : undefined,
     resume: Boolean(sessionId),
     onSessionChange(session) {
@@ -20,8 +30,14 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
         window.history.replaceState(null, "", `/s/${encodeURIComponent(session.sessionId)}`);
     },
   });
+  useEffect(() => {
+    const element = messagesElement.current;
+    if (element && followLatest.current) element.scrollTop = element.scrollHeight;
+  }, [agent.data.messages]);
   const busy = agent.status === "submitted" || agent.status === "streaming";
-  const waiting = busy || agent.status === "resuming" || retiring;
+  const waiting = busy || agent.status === "resuming" || retiring || stopping || responding !== null;
+  const stopped = agent.events.findLast(event =>
+    ["turn.started", "turn.completed", "turn.cancelled"].includes(event.type))?.type === "turn.cancelled";
   const preview = browserPreview(agent.events);
   const pending = agent.data.messages
     .flatMap((message) => message.parts)
@@ -33,12 +49,30 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
   async function send(text: string) {
     if (!text.trim() || waiting) return;
     setError("");
+    submissionFailed.current = false;
+    followLatest.current = true;
     try {
       await agent.send(text.trim());
-      setInput("");
-    } catch {
-      setError("The request failed. Check the local server and retry.");
+      if (!submissionFailed.current) setInput("");
+    } catch (error) {
+      setError(requestErrorMessage(error));
     }
+  }
+  async function stop() {
+    if (stopping) return;
+    setStopping(true);
+    setError("");
+    try { await agent.cancel(); }
+    catch { setError("Stop failed. Please retry."); }
+    finally { setStopping(false); }
+  }
+  async function respond(requestId: string, answer: { text: string } | { optionId: string }) {
+    if (responding) return;
+    setResponding(requestId);
+    setError("");
+    try { await agent.respond([{ requestId, ...answer }]); }
+    catch { setError("Reply failed. Please retry."); }
+    finally { setResponding(null); }
   }
   async function newConversation() {
     if (waiting) return;
@@ -47,6 +81,7 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
     try {
       if (agent.session)
         await new Client({ host: "" }).sessions.attach(agent.session.sessionId).reset();
+      followLatest.current = true;
       agent.reset();
       setInput("");
       router.push("/");
@@ -89,7 +124,15 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
           >
             Open demo site ↗
           </button>
-          <div className="messages" aria-live="polite">
+          <div
+            className="messages"
+            ref={messagesElement}
+            aria-live="polite"
+            onScroll={(event) => {
+              const element = event.currentTarget;
+              followLatest.current = element.scrollHeight - element.scrollTop - element.clientHeight < 60;
+            }}
+          >
             {agent.data.messages
               .filter((message) => message.role === "user" || message.role === "assistant")
               .map((message) => (
@@ -106,7 +149,7 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
               ))}
           </div>
           <p role="status" className="muted">
-            {waiting ? "Working…" : "Ready"}
+            {retiring ? "Closing conversation…" : stopping ? "Stopping…" : responding ? "Sending reply…" : waiting ? "Working…" : pending.length ? "Waiting for your reply" : stopped ? "Stopped" : "Ready"}
           </p>
           {(error || agent.error) && (
             <p role="alert">
@@ -114,16 +157,14 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
             </p>
           )}
           {pending.map((request) => (
-            <fieldset key={request.requestId}>
+            <fieldset key={request.requestId} disabled={waiting || responding !== null}>
               <legend>{request.prompt}</legend>
               {request.options?.map((option) => (
                 <button
                   key={option.id}
                   type="button"
                   onClick={() =>
-                    void agent
-                      .respond([{ requestId: request.requestId, optionId: option.id }])
-                      .catch(() => setError("Reply failed. Please retry."))
+                    void respond(request.requestId, { optionId: option.id })
                   }
                 >
                   {option.label}
@@ -137,9 +178,7 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
                       new FormData(event.currentTarget).get("reply") ?? "",
                     ).trim();
                     if (text)
-                      void agent
-                        .respond([{ requestId: request.requestId, text }])
-                        .catch(() => setError("Reply failed. Please retry."));
+                      void respond(request.requestId, { text });
                   }}
                 >
                   <label htmlFor={`reply-${request.requestId}`}>Your reply</label>
@@ -162,7 +201,15 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
               onChange={(event) => setInput(event.target.value)}
               placeholder="Research a topic, compare options, or work through a task…"
               disabled={waiting}
+              aria-describedby="composer-help"
+              onKeyDown={(event) => {
+                if (!event.nativeEvent.isComposing && event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+                  event.preventDefault();
+                  void send(input);
+                }
+              }}
             />
+            <p id="composer-help" className="composer-help">Ctrl / ⌘ + Enter to send. Enter for a new line.</p>
             <div className="actions">
               <button type="submit" disabled={waiting || !input.trim()}>
                 Send
@@ -170,11 +217,10 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
               {busy && (
                 <button
                   type="button"
-                  onClick={() =>
-                    void agent.cancel().catch(() => setError("Stop failed. Please retry."))
-                  }
+                  disabled={stopping}
+                  onClick={() => void stop()}
                 >
-                  Stop
+                  {stopping ? "Stopping…" : "Stop"}
                 </button>
               )}
             </div>

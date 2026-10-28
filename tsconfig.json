@@ -23,7 +23,8 @@
       }
     ],
     "allowJs": false,
-    "incremental": true
+    "incremental": true,
+    "allowImportingTsExtensions": true
   },
   "include": [
     "**/*.ts",
