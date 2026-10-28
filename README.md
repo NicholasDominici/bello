@@ -2,9 +2,9 @@
 
 **Browserbase · Eve · Link · Linq · Orbit.** BELLO adds Orbit people intelligence to [Browserbase's BELL](https://github.com/browserbase/bell-stack), in a workspace styled to match Orbit.
 
-<p align="center"><img width="96" height="96" alt="BELLO Orbit mark" src="app/icon.svg" /></p>
+<p align="center"><img width="96" height="96" alt="Orbit logo" src="public/orbit-logo.png" /></p>
 
-Ask BELLO to research a page or work through a browser task. Follow its screenshots alongside the conversation, inspect formatted answers, and stop or reset the work when you're done. Each conversation owns its browser.
+Ask BELLO to research a page, work through a browser task, find a person, or learn more about someone. Follow browser screenshots alongside the conversation, explore Orbit profiles and sources in the People panel, and stop or reset the work when you're done. Each conversation owns its browser.
 
 ## Run locally
 
@@ -28,7 +28,7 @@ Set `OPENAI_API_KEY` and `ORBIT_API_KEY` in `.env.local`. The Orbit key needs `s
 pnpm dev
 ```
 
-Open **http://127.0.0.1:4320**. First startup may download and prepare Eve's local sandbox runtime. Send with the button or **Ctrl / ⌘ + Enter**; Enter adds a new line.
+Open **http://127.0.0.1:4320**. First startup may download and prepare Eve's local sandbox runtime. Try asking BELLO to summarize a website or find someone by name and company, then prepare a source-backed brief about their work. Send with the button or **Ctrl / ⌘ + Enter**; Enter adds a new line.
 
 ## Production preview
 
@@ -73,7 +73,7 @@ CI's compile-only artifacts need a full `pnpm build` before serving local traffi
 
 ## Orbit people intelligence
 
-Ask BELLO to find a person, prepare for a meeting, or understand someone’s work. The People panel shows actual Orbit profiles and supporting sources. `orbit_search` starts a bounded v3 search; `orbit_search_status` resumes it; `orbit_profile` reads deeper public sections. Running searches keep their request IDs across retries, terminal results are cached, and credit/auth failures stop without replacement searches. The operator’s Orbit key is unavailable to messaging senders.
+Ask BELLO to find a person, prepare for a meeting, or understand someone’s work. For example: “Find Linus Torvalds and tell me about his work,” or “Help me find Alex Chen at Acme using their name and company.” The People panel shows actual Orbit profiles and supporting sources. `orbit_search` starts a bounded v3 search; `orbit_search_status` resumes it; `orbit_profile` reads deeper public sections. Running searches keep their request IDs across retries, terminal results are cached, and credit/auth failures stop without replacement searches. The operator’s Orbit key is unavailable to messaging senders.
 
 For the complete live hill climb, including a bounded one-person public-figure search and profile read:
 
