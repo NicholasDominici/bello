@@ -70,6 +70,22 @@ describe("Orbit v3 client", () => {
       await expect(new OrbitClient({ config, fetch: vi.fn<typeof fetch>().mockResolvedValue(response) }).search(input, signal())).rejects.toMatchObject({ code: "invalid_response" });
     }
   });
+  it("reads a rich profile over 2 MB while compacting repeated evidence and retaining facts", async () => {
+    const value = raw();
+    Object.assign(value.results[0].profile.sections.bio, { sources: [{ link: "https://evidence.example/bio", title: "Biography evidence", chunks: [{ content: "x".repeat(2_100_000) }] }] });
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ profile_id: "canonical", generation_level: 3, profile: value.results[0].profile }));
+    const result = await new OrbitClient({ config, fetch: fetcher }).profile("canonical", "same-read", signal());
+    expect(result.person.bio).toBe("Builds compiler tooling.");
+    expect(result.person.sources[0].url).toBe("https://evidence.example/bio");
+    expect(JSON.stringify(result).length).toBeLessThan(5000);
+  });
+  it("retains source excerpts when explicitly requested", async () => {
+    const value = raw();
+    Object.assign(value.results[0].profile.sections.bio, { sources: [{ link: "https://evidence.example/bio", chunks: [{ content: "Detailed supporting excerpt" }] }] });
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ profile_id: "canonical", generation_level: 3, profile: value.results[0].profile }));
+    const result = await new OrbitClient({ config, fetch: fetcher }).profile("canonical", "evidence-read", signal(), true);
+    expect(JSON.stringify(result)).toContain("Detailed supporting excerpt");
+  });
   it("prioritizes the visible biography's supporting sources", async () => {
     const value = raw();
     Object.assign(value.results[0].profile.sections.bio, { sources: [{ link: "https://evidence.example/bio", title: "Biography evidence" }] });
@@ -130,7 +146,7 @@ describe("Orbit tools and durable receipts", () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(new Response("", { status: 429, headers: { "Retry-After": "60" } }));
     vi.stubGlobal("fetch", fetcher);
     expect(await searchTool.execute(searchInput, context())).toMatchObject({ code: "rate_limited" });
-    expect(await profileTool.execute({ profile_id: "anything" }, context("next-call"))).toMatchObject({ code: "rate_limited" });
+    expect(await profileTool.execute({ profile_id: "anything", include_source_excerpts: false }, context("next-call"))).toMatchObject({ code: "rate_limited" });
     expect(fetcher).toHaveBeenCalledOnce();
   }));
   it("keeps pending receipts when pruning terminal history", () => contextStorage.run(new ContextContainer(), () => {
@@ -143,7 +159,7 @@ describe("Orbit tools and durable receipts", () => {
     for (const tool of [
       () => searchTool.execute(searchInput, context("call", "linq-message")),
       () => statusTool.execute({ search_id: "anything" }, context("call", "linq-message")),
-      () => profileTool.execute({ profile_id: "anything" }, context("call", "linq-message")),
+      () => profileTool.execute({ profile_id: "anything", include_source_excerpts: false }, context("call", "linq-message")),
     ]) expect(await tool()).toMatchObject({ code: "operator_only", status: "error" });
     expect(fetcher).not.toHaveBeenCalled();
   });

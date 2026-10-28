@@ -147,7 +147,7 @@ try {
   });
   if (includeOrbit) await check(stage = "Orbit people intelligence", async () => {
     const result = await (await session.send(
-      "Bounded Orbit integration test: use orbit_search once for Linus Torvalds, limit 1, profile_depth quick, candidate_discovery false, new_search false. If running, wait poll_after_ms and use orbit_search_status until terminal. Read the ready matching profile with orbit_profile once. Give a short factual brief with a supporting source link. Use only the Orbit tools, and do not browse, enrich explicitly, message, pay, use vaults or start replacement searches.",
+      "Bounded Orbit integration test: use orbit_search once for Linus Torvalds, limit 1, profile_depth quick, candidate_discovery false, new_search false. If running, wait poll_after_ms and use orbit_search_status until terminal. Read the ready matching profile with orbit_profile once and include_source_excerpts false. Give a short factual brief with a supporting source link. Use only the Orbit tools, and do not browse, enrich explicitly, message, pay, use vaults or start replacement searches.",
       { signal: AbortSignal.timeout(90_000) },
     )).result();
     assert.equal(result.status, "waiting");

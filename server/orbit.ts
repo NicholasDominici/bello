@@ -3,6 +3,8 @@ import { setTimeout as delay } from "node:timers/promises";
 import { z } from "zod";
 import { orbitSourceUrl, type OrbitPerson, type OrbitSearch } from "../lib/orbit-result";
 
+type JsonValue = z.infer<ReturnType<typeof z.json>>;
+
 export interface OrbitConfig { apiKey: string; origin: string }
 export function orbitConfig(env: Record<string, string | undefined> = process.env): OrbitConfig {
   const apiKey = env.ORBIT_API_KEY?.trim();
@@ -40,7 +42,22 @@ const rawSearch = z.object({
 });
 const rawProfile = z.object({ profile_id: z.string().min(1), generation_level: z.number().nullable(), profile });
 const text = (value: unknown, limit = 1000) => typeof value === "string" && value.trim() ? value.trim().slice(0, limit) : undefined;
-function person(id: string, status: OrbitPerson["status"], value: z.infer<typeof profile>, receipts: z.infer<typeof source>[] = []): OrbitPerson {
+/** Preserve public facts while avoiding repeated evidence blobs in every section item. */
+function contextValue(value: JsonValue, includeExcerpts: boolean): JsonValue {
+  if (Array.isArray(value)) return value.map(item => contextValue(item, includeExcerpts));
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(Object.entries(value).map(([key, item]) => {
+    if (key !== "sources" || !Array.isArray(item)) return [key, contextValue(item, includeExcerpts)];
+    return [key, item.flatMap(receipt => {
+      if (!receipt || typeof receipt !== "object" || Array.isArray(receipt)) return [];
+      const url = orbitSourceUrl(receipt.link);
+      if (!url) return [];
+      const title = text(receipt.title, 200);
+      return [{ link: url, ...(title ? { title } : {}), ...(includeExcerpts && receipt.chunks ? { chunks: receipt.chunks } : {}) }];
+    })];
+  }));
+}
+function person(id: string, status: OrbitPerson["status"], value: z.infer<typeof profile>, receipts: z.infer<typeof source>[] = [], includeExcerpts = false): OrbitPerson {
   const headline = typeof value.headline === "string" ? value.headline : [value.headline?.jobTitle, value.headline?.companyName].filter(Boolean).join(" · ");
   const location = typeof value.location === "string" ? value.location : [value.location?.city, value.location?.region, value.location?.country].filter(Boolean).join(", ");
   const bio = value.sections?.bio;
@@ -55,7 +72,7 @@ function person(id: string, status: OrbitPerson["status"], value: z.infer<typeof
     headline: text(headline, 300), location: text(location, 300),
     bio: bio && typeof bio === "object" && !Array.isArray(bio) ? text(bio.bio, 4000) : undefined,
     profile_url: orbitSourceUrl(value.profileUrl), generation_level: value.generationLevel,
-    sections: value.sections, sources: [...sources.values()].slice(0, 12),
+    sections: value.sections ? Object.fromEntries(Object.entries(value.sections).map(([key, item]) => [key, contextValue(item, includeExcerpts)])) : undefined, sources: [...sources.values()].slice(0, 12),
   };
 }
 function retryAfter(value: string | null): number | undefined {
@@ -74,7 +91,7 @@ function httpError(status: number, retry?: number): OrbitError {
   if (status >= 500) return new OrbitError("unavailable", "Orbit is temporarily unavailable. Retry the same operation, preserving its request ID.", retry, true);
   return new OrbitError("invalid_request", "Orbit rejected the request. Check the query and parameters.");
 }
-async function boundedJson(response: Response): Promise<unknown> {
+async function boundedJson(response: Response, maxBytes: number): Promise<unknown> {
   const reader = response.body?.getReader();
   if (!reader) throw new OrbitError("invalid_response", "Orbit returned an empty response.");
   const chunks: Uint8Array[] = [];
@@ -84,7 +101,7 @@ async function boundedJson(response: Response): Promise<unknown> {
       const next = await reader.read();
       if (next.done) break;
       size += next.value.byteLength;
-      if (size > 2_000_000) throw new OrbitError("invalid_response", "Orbit returned more data than this workspace can accept. Narrow the search.");
+      if (size > maxBytes) throw new OrbitError("invalid_response", "Orbit returned more data than this workspace can accept. Narrow the search.");
       chunks.push(next.value);
     }
     return JSON.parse(Buffer.concat(chunks).toString("utf8"));
@@ -103,7 +120,7 @@ export class OrbitClient {
     this.fetcher = options.fetch ?? fetch;
     this.sleep = options.sleep ?? ((ms, signal) => delay(ms, undefined, { signal }));
   }
-  private async request(path: string, signal: AbortSignal, requestId?: string, body?: unknown): Promise<unknown> {
+  private async request(path: string, signal: AbortSignal, requestId?: string, body?: unknown, maxBytes = 2_000_000): Promise<unknown> {
     const bounded = AbortSignal.any([signal, AbortSignal.timeout(20_000)]);
     for (let attempt = 0; ; attempt++) {
       signal.throwIfAborted();
@@ -120,7 +137,7 @@ export class OrbitClient {
       }
       if (response.ok) {
         // An upstream must never echo the operator credential into model-visible results.
-        const value = await boundedJson(response);
+        const value = await boundedJson(response, maxBytes);
         return JSON.parse(JSON.stringify(value).replaceAll(this.config.apiKey, "[redacted]")) as unknown;
       }
       const error = httpError(response.status, retryAfter(response.headers.get("retry-after")));
@@ -157,10 +174,10 @@ export class OrbitClient {
       ...(data.billing ? { billing: { status: data.billing.status, consumed_credits: data.billing.consumedCredits, held_credits: data.billing.heldCredits } } : {}),
     };
   }
-  async profile(profileId: string, requestId: string, signal: AbortSignal) {
-    const result = rawProfile.safeParse(await this.request(`/v3/enrich/${encodeURIComponent(profileId)}`, signal, requestId));
+  async profile(profileId: string, requestId: string, signal: AbortSignal, includeExcerpts = false) {
+    const result = rawProfile.safeParse(await this.request(`/v3/enrich/${encodeURIComponent(profileId)}`, signal, requestId, undefined, 8_000_000));
     if (!result.success) throw new OrbitError("invalid_response", "Orbit's profile response did not match the v3 contract.");
     return { provider: "orbit" as const, operation: "profile" as const, status: "completed" as const,
-      person: { ...person(result.data.profile_id, "ready", result.data.profile), generation_level: result.data.generation_level } };
+      person: { ...person(result.data.profile_id, "ready", result.data.profile, [], includeExcerpts), generation_level: result.data.generation_level } };
   }
 }

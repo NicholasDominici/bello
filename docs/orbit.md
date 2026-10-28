@@ -18,6 +18,8 @@ The key is never a tool parameter, browser prop, or model result. Each developer
 
 Repeated identical search calls resume the same logical operation. `new_search` is reserved for user-requested fresh work. Request IDs derive from the session/tool call and are journaled before POST, so replay and uncertain-network retries reuse the same idempotency key. At most eight operations are retained; active receipts are not discarded to make room for terminal history.
 
+Profile responses are bounded at 8 MB, separately from the 2 MB search-response limit. Repeated source excerpt blobs are compacted from section items by default while preserving public facts and citation links. Set `include_source_excerpts` on `orbit_profile` when detailed supporting quotations are needed.
+
 The client retries at most twice on 429/5xx, using the exact same request body/key, exponential backoff and `Retry-After`. Long retry delays are returned to the caller instead of retrying early. Billing, auth, validation and scope errors do not retry. A running result is not a failure; partial success retains ready people and their IDs. Completed results stop polling.
 
 Orbit search and profile reads use credits according to the API's current billing contract. A profile read can schedule the API's normal stale-profile refresh. BELLO does not add a tariff or silently request regeneration. The assistant must distinguish observed facts, inference, missing context and uncertain identity matches.
