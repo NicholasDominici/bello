@@ -29,7 +29,7 @@ export function isAllowedBellMessage(message: Pick<LinqMessage, "author" | "raw"
 
 export default linqChannel({
   events: linqBrowserEvents,
-  userName: "Bell",
+  userName: "BELLO",
   credentials: {
     apiKey: () => requiredEnvironmentValue("LINQ_API_KEY"),
     signingSecret: () => requiredEnvironmentValue("LINQ_WEBHOOK_SECRET"),
@@ -40,7 +40,7 @@ export default linqChannel({
     return {
       auth: defaultLinqAuth(message),
       context: [
-        "This request arrived through Bell's private Linq iMessage or SMS channel. "
+        "This request arrived through BELLO's private Linq iMessage or SMS channel. "
         + "Reply concisely in this chat. Use the same browser for follow-up requests. "
         + "For a human-only step, send the human_handoff tool's link and wait for a reply.",
       ],

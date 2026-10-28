@@ -12,11 +12,11 @@ export async function approvalPost(request: Request, action: string, service: ()
     const parsed = input.parse(JSON.parse(raw));
     const result = action === "approval-open" ? await login.opened(parsed.cap) : await login.poll(parsed.cap, parsed.manual ?? false);
     return Response.json(result, { headers });
-  } catch { return Response.json({ error: "Approval could not continue. Return to Bell and start a new login request." }, { status: 400, headers }); }
+  } catch { return Response.json({ error: "Approval could not continue. Return to BELLO and start a new login request." }, { status: 400, headers }); }
 }
 export function approvalPage(): Response {
   const nonce = randomBytes(18).toString("base64");
-  return new Response(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Approve a Bell login</title><body><h1>Approve a Bell login</h1><p>Use the computer running your 1Password desktop app. Check the requested website before approving.</p><button id="open">Open 1Password</button><button id="check" hidden>I approved — check again</button><p id="status"></p><script nonce="${nonce}">
+  return new Response(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Approve a BELLO login</title><body><h1>Approve a BELLO login</h1><p>Use the computer running your 1Password desktop app. Check the requested website before approving.</p><button id="open">Open 1Password</button><button id="check" hidden>I approved — check again</button><p id="status"></p><script nonce="${nonce}">
 (() => {
   const cap = location.hash.slice(1), status = document.getElementById("status"), open = document.getElementById("open"), check = document.getElementById("check");
   history.replaceState(null, "", "/api/onepassword/approval");
@@ -40,8 +40,8 @@ export function approvalPage(): Response {
       }
       if (result.status === "pending") { status.textContent = "Waiting for approval in 1Password…"; setTimeout(() => poll(), (result.retryAfter || 5) * 1000); }
       else if (result.status === "waiting_for_user") { status.textContent = "Automatic checks have stopped. Check once more after approving."; check.hidden = false; }
-      else status.textContent = "The login was not approved. Return to Bell.";
-    } catch { status.textContent = "Could not continue this approval. Return to Bell and start a new login request."; }
+      else status.textContent = "The login was not approved. Return to BELLO.";
+    } catch { status.textContent = "Could not continue this approval. Return to BELLO and start a new login request."; }
     finally { polling = false; }
   }
   open.onclick = async () => {
@@ -50,7 +50,7 @@ export function approvalPage(): Response {
     popup.opener = null;
     open.disabled = true;
     try { const result = await post("approval-open"); popup.location.href = result.appLink; status.textContent = "Approve the login for " + result.website; setTimeout(() => poll(), 5000); }
-    catch { popup.close(); status.textContent = "This approval expired. Return to Bell."; }
+    catch { popup.close(); status.textContent = "This approval expired. Return to BELLO."; }
   };
   check.onclick = () => poll(true);
 })();

@@ -14,7 +14,7 @@ describe("opt-in live Context save", () => {
       const sdk = new Browserbase({ apiKey });
       const marker = `bell-${Date.now()}`;
       const remote = await sdk.contexts.create({
-        name: `Bell test ${Date.now()}`,
+        name: `BELLO test ${Date.now()}`,
         ...(process.env.BROWSERBASE_PROJECT_ID
           ? { projectId: process.env.BROWSERBASE_PROJECT_ID }
           : {}),

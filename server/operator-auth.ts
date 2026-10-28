@@ -27,7 +27,7 @@ export const operatorAuth = withAuthChallenges((request: Request) => {
   if (!credentials) return null;
   const result = verifyHttpBasic(request.headers.get("authorization"), credentials);
   return result.ok ? result.sessionAuth : null;
-}, [{ scheme: "Basic", parameters: { realm: "Bell", charset: "UTF-8" } }]);
+}, [{ scheme: "Basic", parameters: { realm: "BELLO", charset: "UTF-8" } }]);
 
 function assertOperatorOrigin(request: Request): void {
   const expected = new URL(request.url);

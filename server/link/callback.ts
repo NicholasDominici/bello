@@ -13,7 +13,7 @@ export async function linkCallback(request: Request, service: () => LinkOAuth = 
     const target = await safeLinkCall(() => service().forward(Object.fromEntries(params)));
     return new Response(null, { status: 303, headers: { ...headers, location: target } });
   } catch {
-    return new Response("Link authorization could not be completed. Return to your Bell text conversation and request a new connection link.", {
+    return new Response("Link authorization could not be completed. Return to your BELLO text conversation and request a new connection link.", {
       status: 400, headers: { ...headers, "content-type": "text/plain; charset=utf-8" },
     });
   }

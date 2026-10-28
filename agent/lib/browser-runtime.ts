@@ -293,7 +293,7 @@ export async function saveBrowserContext(
   if (!contextId) {
     const created = await createBrowserContext(
       sessionId,
-      name?.trim() || `Bell ${new Date().toISOString().slice(0, 10)}`,
+      name?.trim() || `BELLO ${new Date().toISOString().slice(0, 10)}`,
       signal,
     );
     contextId = created.id;
@@ -341,7 +341,7 @@ function createRuntimeBrowser(
 function defaultContextName(record: { title: string }): string {
   const title = record.title.trim();
   if (title && title !== "New task") return title.slice(0, 80);
-  return `Bell ${new Date().toISOString().slice(0, 10)}`;
+  return `BELLO ${new Date().toISOString().slice(0, 10)}`;
 }
 
 function scheduleIdleClose(sessionId: string, runtime: BrowserRuntime): void {

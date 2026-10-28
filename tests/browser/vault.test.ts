@@ -59,7 +59,7 @@ describe("existing local encrypted vaults", () => {
     expect(JSON.stringify(await vault.list())).not.toMatch(/fixture-password|fixture-user|JBSWY/);
   });
 
-  it.each(["base64", "hex"] as const)("uses Bell configuration with a %s master key", async (encoding) => {
+  it.each(["base64", "hex"] as const)("uses BELLO configuration with a %s master key", async (encoding) => {
     const { path } = await fixture();
     vi.stubEnv("BELL_VAULT_FILE", path);
     vi.stubEnv("BELL_VAULT_MASTER_KEY", masterKey.toString(encoding));

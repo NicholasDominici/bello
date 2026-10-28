@@ -83,15 +83,15 @@ async function deliver(event: ReturnType<typeof message>, options: { tamper?: bo
   return { response, from, dispatch };
 }
 
-describe("Bell's signed Linq webhook", () => {
-  it("dispatches a verified direct message to Bell with sender auth and chat state", async () => {
+describe("BELLO's signed Linq webhook", () => {
+  it("dispatches a verified direct message to BELLO with sender auth and chat state", async () => {
     const event = message();
     const { response, from, dispatch } = await deliver(event);
     expect(response.status).toBe(200);
     expect(from).toHaveBeenCalledWith(expect.stringContaining(event.data.chat.id));
     expect(dispatch).toHaveBeenCalledOnce();
     expect(dispatch).toHaveBeenCalledWith(event.data.parts[0].value, expect.objectContaining({
-      context: [expect.stringContaining("Bell's private Linq")],
+      context: [expect.stringContaining("BELLO's private Linq")],
       auth: expect.objectContaining({ principalId: "linq:sender-handle-id", principalType: "user" }),
       state: { thread: expect.objectContaining({ isDM: true }) },
     }));

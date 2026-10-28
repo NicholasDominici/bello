@@ -81,7 +81,7 @@ it("advertises Basic authentication and accepts authenticated server clients", a
   const unauthenticated = await cancel.handler(new Request(endpoint, { method: "POST", body: "{}" }), context as never);
   if (!(unauthenticated instanceof Response)) throw new Error("Expected an HTTP response.");
   expect(unauthenticated.status).toBe(401);
-  expect(unauthenticated.headers.get("www-authenticate")).toContain('Basic realm="Bell", charset="UTF-8"');
+  expect(unauthenticated.headers.get("www-authenticate")).toContain('Basic realm="BELLO", charset="UTF-8"');
   expect(unauthenticated.headers.get("www-authenticate")).toContain("Bearer");
   expect(callback).not.toHaveBeenCalled();
 

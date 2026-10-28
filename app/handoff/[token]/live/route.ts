@@ -28,7 +28,7 @@ export async function GET(_request: Request, context: { params: Promise<{ token:
       {
         error:
           status === 410
-            ? "This handoff link expired. Ask Bell for a new link."
+            ? "This handoff link expired. Ask BELLO for a new link."
             : "The live browser is not available.",
       },
       {

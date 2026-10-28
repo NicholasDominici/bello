@@ -8,7 +8,7 @@ const headers = { "Cache-Control": "no-store", "Referrer-Policy": "no-referrer",
 const callbackInput = z.object({ state: z.string().regex(/^[A-Za-z0-9_-]{43}$/), code: z.string().min(1).max(4096).optional(), error: z.string().max(100).optional(), integrationKey: z.string().max(4100).optional() }).strict();
 const cookie = (value: string) => `${COOKIE}=${value}; Path=/api/onepassword; HttpOnly; Secure; SameSite=Lax; Max-Age=600`;
 const browserNonce = (request: Request) => request.headers.get("cookie")?.split(";").map(value => value.trim()).find(value => value.startsWith(`${COOKIE}=`))?.slice(COOKIE.length + 1) ?? "";
-function invalid() { return new Response("1Password could not connect. Return to Bell to reconnect or disconnect and try again.", { status: 400, headers }); }
+function invalid() { return new Response("1Password could not connect. Return to BELLO to reconnect or disconnect and try again.", { status: 400, headers }); }
 export async function onePasswordGet(request: Request, action: string, service: () => OnePasswordOAuth = getOnePassword): Promise<Response> {
   if (action === "callback") return callbackPage();
   if (action !== "start") return new Response(null, { status: 404, headers });
@@ -34,7 +34,7 @@ export async function onePasswordPost(request: Request, action: string, service:
 }
 export function callbackPage(): Response {
   const nonce = randomBytes(18).toString("base64");
-  return new Response(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Connect 1Password to Bell</title><body><p id="status">Connecting your 1Password account…</p><script nonce="${nonce}">
+  return new Response(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Connect 1Password to BELLO</title><body><p id="status">Connecting your 1Password account…</p><script nonce="${nonce}">
 (async () => {
   const query = new URLSearchParams(location.search), fragment = new URLSearchParams(location.hash.slice(1));
   const status = document.getElementById("status");
@@ -51,7 +51,7 @@ export function callbackPage(): Response {
     const target = new URL(next);
     if (target.origin !== location.origin || !target.pathname.startsWith("/eve/v1/connections/")) throw new Error();
     location.replace(target.href);
-  } catch { history.replaceState(null, "", "/api/onepassword/callback"); status.textContent = "Connection could not finish. Return to Bell to reconnect. If Bell reports a missing integration key, disconnect first."; }
+  } catch { history.replaceState(null, "", "/api/onepassword/callback"); status.textContent = "Connection could not finish. Return to BELLO to reconnect. If BELLO reports a missing integration key, disconnect first."; }
 })();
 </script></body></html>`, { headers: { ...headers, "Content-Type": "text/html; charset=utf-8", "Content-Security-Policy": `default-src 'none'; script-src 'nonce-${nonce}'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'` } });
 }

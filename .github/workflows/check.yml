@@ -1,4 +1,4 @@
-name: Check Bell
+name: Check BELLO
 
 on:
   pull_request:

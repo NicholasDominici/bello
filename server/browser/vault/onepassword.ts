@@ -85,7 +85,7 @@ export class OnePasswordVault {
           const sdk = await import("@1password/sdk");
           return await sdk.createClient({
             auth: token || new sdk.DesktopAuth(account!),
-            integrationName: "Bell",
+            integrationName: "BELLO",
             integrationVersion: "0.1.0",
           });
         } catch {

@@ -119,7 +119,7 @@ describe("1Password vault", () => {
     await vault.list();
     await vault.login("vault-id", "login-id");
     expect(sdk.createClient).toHaveBeenCalledExactlyOnceWith({
-      auth: "fixture-service-token", integrationName: "Bell", integrationVersion: "0.1.0",
+      auth: "fixture-service-token", integrationName: "BELLO", integrationVersion: "0.1.0",
     });
   });
 
@@ -129,7 +129,7 @@ describe("1Password vault", () => {
     await new OnePasswordVault().list();
     expect(sdk.createClient).toHaveBeenCalledWith({
       auth: expect.objectContaining({ accountName: "Desktop account" }),
-      integrationName: "Bell", integrationVersion: "0.1.0",
+      integrationName: "BELLO", integrationVersion: "0.1.0",
     });
   });
 

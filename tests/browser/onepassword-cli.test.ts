@@ -102,7 +102,7 @@ describe("explicit 1Password CLI compatibility", () => {
     }
   });
 
-  it("does not use an ambient CLI account when Bell has no explicit credentials", async () => {
+  it("does not use an ambient CLI account when BELLO has no explicit credentials", async () => {
     vi.stubEnv("OP_ACCOUNT", "");
     vi.stubEnv("OP_SESSION", "ambient-session");
     await expect(new OnePasswordVault().list()).rejects.toThrow("explicit OP_ACCOUNT");

@@ -22,7 +22,7 @@ function handoffPage(livePath: string): string {
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-    <title>Bell human handoff</title>
+    <title>BELLO human handoff</title>
     <style>
       * { box-sizing: border-box; }
       html, body { height: 100%; margin: 0; }
@@ -36,8 +36,8 @@ function handoffPage(livePath: string): string {
   </head>
   <body>
     <main>
-      <header><h1>Bell needs your help</h1><p>Complete the step, then return to your Bell conversation.</p></header>
-      <iframe src="${livePath}" title="Bell live browser" allow="clipboard-read; clipboard-write"></iframe>
+      <header><h1>BELLO needs your help</h1><p>Complete the step, then return to your BELLO conversation.</p></header>
+      <iframe src="${livePath}" title="BELLO live browser" allow="clipboard-read; clipboard-write"></iframe>
     </main>
   </body>
 </html>`;

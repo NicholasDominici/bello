@@ -15,7 +15,7 @@ describe("opt-in live 1Password login", () => {
     async () => {
       const items = await onePasswordVault.list(),
         item = items.find((candidate) =>
-          candidate.label === "Bell integration test (authenticationtest.com)" &&
+          candidate.label === "BELLO integration test (authenticationtest.com)" &&
           candidate.allowedHosts.includes("authenticationtest.com"));
       expect(item).toBeDefined();
       expect(item?.fields).toEqual({

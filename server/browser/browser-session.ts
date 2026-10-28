@@ -616,7 +616,7 @@ export class BrowserSession {
         this.state,
         "system",
         "browser.replace",
-        "The saved Browserbase session expired. Bell is starting a replacement with the same Context.",
+        "The saved Browserbase session expired. BELLO is starting a replacement with the same Context.",
         {
           contextPreserved: Boolean(this.options.contextId ?? process.env.BROWSERBASE_CONTEXT_ID),
         },
@@ -651,7 +651,7 @@ export class BrowserSession {
             this.state,
             "system",
             "browser.start.retry",
-            `The Browserbase connection failed. Bell will retry with a new verified, proxied session (${attempt}/3).`,
+            `The Browserbase connection failed. BELLO will retry with a new verified, proxied session (${attempt}/3).`,
             { attempt, proxies: true, verified: true },
           );
           await new Promise((resolve) => setTimeout(resolve, attempt * 500));

@@ -5,6 +5,7 @@ import { useEveAgent } from "eve/react";
 import { Client } from "eve/client";
 import { useState } from "react";
 import { browserPreview } from "./projection";
+import Message from "./message";
 
 export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoUrl: string }) {
   const router = useRouter();
@@ -32,9 +33,9 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
   async function send(text: string) {
     if (!text.trim() || waiting) return;
     setError("");
-    setInput("");
     try {
       await agent.send(text.trim());
+      setInput("");
     } catch {
       setError("The request failed. Check the local server and retry.");
     }
@@ -56,12 +57,13 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
     }
   }
   return (
-    <main>
+    <main id="main-content">
+      <a className="skip-link" href="#message">Skip to message</a>
       <header>
         <div>
-          <p className="eyebrow">PERSONAL ASSISTANT STACK</p>
+          <p className="eyebrow">ORBIT / PERSONAL ASSISTANT</p>
           <h1>
-            Bell<span>.</span>
+            BELL<span>O</span>
           </h1>
         </div>
         <button
@@ -75,7 +77,7 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
       <section className="workspace">
         <div className="conversation">
           <h2>Ask. Browse. Verify.</h2>
-          <p className="muted">One conversation, one persistent browser.</p>
+          <p className="muted">Give your assistant a task. Follow the work in its own persistent browser.</p>
           <button
             className="starter"
             disabled={waiting}
@@ -92,9 +94,13 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
               .filter((message) => message.role === "user" || message.role === "assistant")
               .map((message) => (
                 <article key={message.id} className={message.role}>
-                  <strong>{message.role === "user" ? "You" : "Bell"}</strong>
+                  <strong>{message.role === "user" ? "You" : "BELLO"}</strong>
                   {message.parts.map((part, index) =>
-                    part.type === "text" ? <p key={index}>{part.text}</p> : null,
+                    part.type === "text" ? (
+                      message.role === "assistant"
+                        ? <Message key={index} text={part.text} />
+                        : <p key={index}>{part.text}</p>
+                    ) : null,
                   )}
                 </article>
               ))}
@@ -149,12 +155,12 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
               void send(input);
             }}
           >
-            <label htmlFor="message">Message Bell</label>
+            <label htmlFor="message">Message BELLO</label>
             <textarea
               id="message"
               value={input}
               onChange={(event) => setInput(event.target.value)}
-              placeholder="What would you like to do?"
+              placeholder="Research a topic, compare options, or work through a task…"
               disabled={waiting}
             />
             <div className="actions">
@@ -174,7 +180,7 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
             </div>
           </form>
         </div>
-        <aside>
+        <aside aria-label="Browser workspace">
           <div className="browser-bar">
             <span>Browser capture</span>
             <span>
@@ -196,8 +202,8 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
             />
           ) : (
             <div className="empty">
-              <span>✦</span>
-              <p>See what Bell sees.</p>
+              <span className="orbit-mark" aria-hidden="true">◎</span>
+              <p>A window into the work.</p>
               <small>Ask for a screenshot after a browser action.</small>
             </div>
           )}

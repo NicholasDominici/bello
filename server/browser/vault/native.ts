@@ -32,7 +32,7 @@ const payloadSchema = z.object({
 });
 
 // The v1 file is trusted operator configuration: only credential fields are encrypted.
-// Keep this reader for existing vaults; Bell does not expose vault management routes.
+// Keep this reader for existing vaults; BELLO does not expose vault management routes.
 export class NativeVault {
   constructor(private path?: string, private masterKey?: Buffer) {}
 

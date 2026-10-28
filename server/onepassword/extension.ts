@@ -61,7 +61,7 @@ async function call(worker: Worker, method: string, accessToken: string, integra
 const createdSchema = z.object({ appLink: z.string().min(1).max(16384), accessRequest: z.object({ id: z.string().min(1), entries: z.array(z.object({ id: z.string().min(1) })).length(1) }) });
 export async function createAccess(connectUrl: string, accessToken: string, integrationKey: string, website: string) {
   return withExtension(connectUrl, async worker => {
-    const value = createdSchema.parse(await call(worker, "createAccessRequest", accessToken, integrationKey, { requests: { version: 2, goal: "Sign in for this Bell conversation", entries: [{ type: "login", parameters: { website }, reason: "Sign in to continue the requested task" }] } }));
+    const value = createdSchema.parse(await call(worker, "createAccessRequest", accessToken, integrationKey, { requests: { version: 2, goal: "Sign in for this BELLO conversation", entries: [{ type: "login", parameters: { website }, reason: "Sign in to continue the requested task" }] } }));
     const link = new URL(value.appLink);
     if (!["https:", "onepassword:"].includes(link.protocol) || link.username || link.password) return failed("invalid_approval_link");
     return { requestId: value.accessRequest.id, entryId: value.accessRequest.entries[0].id, appLink: value.appLink };

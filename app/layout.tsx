@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 import "./style.css";
 
 export const metadata = {
-  title: "Bell | Personal assistant stack",
-  description: "A small, independent browser assistant.",
+  title: "BELLO | Orbit personal assistant",
+  description: "The personal assistant stack with Orbit. Ask, browse, and verify in one workspace.",
 };
 export default function Layout({ children }: { children: ReactNode }) {
   return (

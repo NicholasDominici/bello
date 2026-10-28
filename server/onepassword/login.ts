@@ -50,7 +50,7 @@ export class OnePasswordLogin {
 
       }
       await db.saveTicket(record, hash(login.cap), login.expiresAt);
-      return { challenge: { displayName: "1Password login approval", url: `${this.oauth.config.origin}/api/onepassword/approval#${login.cap}`, expiresAt: new Date(login.expiresAt).toISOString(), instructions: "Open this private page on the computer running 1Password. Approve the requested website, then return to Bell." }, resume: { id } };
+      return { challenge: { displayName: "1Password login approval", url: `${this.oauth.config.origin}/api/onepassword/approval#${login.cap}`, expiresAt: new Date(login.expiresAt).toISOString(), instructions: "Open this private page on the computer running 1Password. Approve the requested website, then return to BELLO." }, resume: { id } };
     });
   }
   private async ticket<T>(cap: string, operation: (db: RecordStore, record: ConnectionState, login: LoginRequest) => Promise<T>): Promise<T> {

@@ -5,7 +5,7 @@ const event = (output: unknown, isError = false) => ({
   type: "action.result",
   data: { result: { kind: "tool-result", output, isError } },
 });
-describe("shared browser output in the Bell panel", () => {
+describe("shared browser output in the BELLO panel", () => {
   it("reads the browser runtime's nested screenshot", () => {
     expect(
       browserPreview([

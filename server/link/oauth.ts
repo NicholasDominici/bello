@@ -63,7 +63,7 @@ export class LinkOAuth {
       || !/^\/eve\/v1\/connections\/[^/]+\/callback\/[^/]+\/[^/]+$/.test(target.pathname)) return failed("invalid_callback_origin");
     // This value comes only from Eve's server-side auth lifecycle, never an HTTP
     // return URL. withEve uses an internal dev port, and Vercel may use its project
-    // domain. Forward the capability through Bell's configured public router while
+    // domain. Forward the capability through BELLO's configured public router while
     // retaining the exact original callback hash for completeAuthorization.
     return new URL(target.pathname + target.search, this.config.origin);
   }

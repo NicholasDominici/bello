@@ -10,7 +10,7 @@ export default defineTool({
   inputSchema: z.object({}),
   approval: always(),
   async execute(_input, ctx) {
-    if (isLinkSandbox()) throw new Error("The sandbox token is managed by its operator. Remove it from the running process and revoke it in Link; Bell has no saved wallet connection to delete.");
+    if (isLinkSandbox()) throw new Error("The sandbox token is managed by its operator. Remove it from the running process and revoke it in Link; BELLO has no saved wallet connection to delete.");
     return safeLinkCall(() => {
       return getLinkOAuth().disconnect(linkPrincipal(ctx));
     });

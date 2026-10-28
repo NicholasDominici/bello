@@ -33,8 +33,8 @@ async function withEveContext(check: () => Promise<void>) {
   });
 }
 
-describe("Bell's shared browser runtime", () => {
-  it("redacts form values and preserves the browser identity through Bell's actual import", () => withEveContext(async () => {
+describe("BELLO's shared browser runtime", () => {
+  it("redacts form values and preserves the browser identity through BELLO's actual import", () => withEveContext(async () => {
     vi.stubEnv("BELL_HANDOFF_SECRET", "synthetic-shared-handoff-secret-at-least-32-bytes");
     const fill = vi.fn(async () => {});
     const page = { locator: () => ({ fill }), url: async () => "https://shop.example/", title: async () => "Fixture" };
@@ -57,14 +57,14 @@ describe("Bell's shared browser runtime", () => {
     expect(output.workbench.browser).not.toHaveProperty("liveViewToken");
   }));
 
-  it("does not recreate Bell's runtime when canceled before queued work starts", () => withEveContext(async () => {
+  it("does not recreate BELLO's runtime when canceled before queued work starts", () => withEveContext(async () => {
     const controller = new AbortController();
     const pending = run.execute({ actions: [{ action: "goto", url: "https://example.com/" }] }, context(controller.signal));
     controller.abort();
     await expect(pending).rejects.toMatchObject({ name: "AbortError" });
     expect(hasBrowserRuntime(sessionId)).toBe(false);
   }));
-  it("shares one runtime across Bell's tool and lifecycle imports", () => withEveContext(async () => {
+  it("shares one runtime across BELLO's tool and lifecycle imports", () => withEveContext(async () => {
     const result = { completed: 1, url: "https://example.com/" };
     const runBrowser = vi.fn().mockResolvedValue(result);
     const snapshotBrowser = vi.fn().mockResolvedValue({ url: result.url });
@@ -89,7 +89,7 @@ describe("Bell's shared browser runtime", () => {
     expect(hasBrowserRuntime(sessionId)).toBe(false);
   }));
 
-  it("closes the shared runtime when Bell passes an already canceled signal", () => withEveContext(async () => {
+  it("closes the shared runtime when BELLO passes an already canceled signal", () => withEveContext(async () => {
     const runBrowser = vi.fn();
     const closeBrowser = vi.fn().mockResolvedValue(undefined);
     await runBrowserOperation(sessionId, async (browser) => {

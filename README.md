@@ -1,6 +1,8 @@
-# BELL
+# BELLO
 
-<p align="center"> <img width="128" height="128" alt="BELL" src="https://github.com/user-attachments/assets/f4c9363d-2ab0-4205-a3c7-7d7ad61ec6c6"/></p>
+**O stands for Orbit.** A developer-focused fork of [Browserbase’s BELL](https://github.com/browserbase/bell-stack).
+
+<p align="center"><img width="96" height="96" alt="BELLO Orbit mark" src="app/icon.svg" /></p>
 
 [BELL](https://www.browserbase.com/blog/bell-personal-assistant-stack) is a reference architecture and sample app for building personal AI assistants that execute tasks on your behalf.
 
@@ -17,8 +19,8 @@
 Requires Node.js 24, pnpm 10.33.4, and OpenAI and Browserbase API keys.
 
 ```sh
-git clone https://github.com/browserbase/bell-stack.git
-cd bell-stack
+git clone https://github.com/NicholasDominici/bello.git
+cd bello
 pnpm install --frozen-lockfile
 cp .env.example .env
 ```
@@ -45,6 +47,10 @@ pnpm dev
 See the [repository layout and implementation map](docs/repository.md) to extend Bell.
 
 
+
+## Quality hill climb
+
+The [release scorecard](docs/quality/hill-climb.md) tracks real scenarios, regression checks, and remaining release gates. Existing `BELL_` environment variables remain compatible with upstream.
 
 ## Development
 
