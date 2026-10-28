@@ -103,7 +103,7 @@ export default function Chat({ sessionId, demoUrl }: { sessionId?: string; demoU
     <main id="main-content">
       <a className="skip-link" href="#message">Skip to message</a>
       <header className="app-header">
-        <div className="brand"><div className="brand-symbol" aria-hidden="true">◎</div><div><h1>BELL<span>O</span></h1><p>YOUR ASSISTANT, IN ORBIT</p></div></div>
+        <div className="brand"><Image className="brand-symbol" src="/orbit-logo.png" width={48} height={49} alt="Orbit" priority /><div><h1>BELL<span>O</span></h1><p>YOUR ASSISTANT, IN ORBIT</p></div></div>
         <div className="header-actions"><a className="orbit-brand" href="https://orbitsearch.com" target="_blank" rel="noreferrer"><span>Powered by</span><Image src="/orbit-wordmark.svg" width={49} height={21} alt="Orbit" /></a>
           <button className="new-chat" disabled={waiting} onClick={() => void newConversation()}>＋ New conversation</button>
         </div>

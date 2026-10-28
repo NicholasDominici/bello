@@ -1,19 +1,11 @@
 /** Source-backed Orbit context, with explicit pending and partial-success states. */
+import Image from "next/image";
 import type { OrbitPerson, OrbitSearch } from "../lib/orbit-result";
 import { orbitSourceUrl } from "../lib/orbit-result";
 
 export function OrbitScene() {
   return <div className="orbital-scene" aria-hidden="true">
-    <svg viewBox="0 0 320 240" fill="none">
-      <defs><linearGradient id="orbit-spectrum" x1="60" y1="20" x2="260" y2="220" gradientUnits="userSpaceOnUse"><stop stopColor="#00DDFF"/><stop offset=".45" stopColor="#466CFF"/><stop offset="1" stopColor="#8800FF"/></linearGradient></defs>
-      <ellipse cx="160" cy="120" rx="130" ry="48" transform="rotate(-30 160 120)" stroke="url(#orbit-spectrum)" strokeOpacity=".7"/>
-      <ellipse cx="160" cy="120" rx="130" ry="48" transform="rotate(30 160 120)" stroke="url(#orbit-spectrum)" strokeOpacity=".45"/>
-      <circle cx="160" cy="120" r="66" stroke="white" strokeOpacity=".12"/>
-      <circle cx="160" cy="120" r="29" stroke="url(#orbit-spectrum)" strokeWidth="2"/>
-      <circle cx="160" cy="120" r="17" fill="url(#orbit-spectrum)" fillOpacity=".15"/>
-      <circle cx="61" cy="151" r="5" fill="#00DDFF"/><circle cx="264" cy="149" r="4" fill="#9567FF"/>
-      <circle cx="173" cy="55" r="3" fill="white" fillOpacity=".8"/>
-    </svg>
+    <Image src="/orbit-logo.png" width={926} height={941} alt="" />
   </div>;
 }
 export default function People({ people, search, error }: { people: OrbitPerson[]; search?: OrbitSearch; error?: string }) {

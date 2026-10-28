@@ -15,7 +15,7 @@ a { color: var(--accent); text-underline-offset: 4px; }
 main { max-width: 1480px; margin: auto; padding: 32px clamp(20px,4vw,64px) 48px; }
 .app-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 30px; margin-bottom: 26px; border-bottom: 1px solid var(--line); gap: 24px; }
 .brand { display: flex; gap: 14px; align-items: center; }
-.brand-symbol { width: 48px; height: 48px; display: grid; place-items: center; font-size: 39px; background: var(--spectrum); background-clip: text; color: transparent; }
+.brand-symbol { width: 48px; height: auto; object-fit: contain; }
 h1 { margin: 0; font-size: 31px; font-weight: 700; letter-spacing: -1.4px; line-height: 1.2; }
 h1 span { color: #85b7ff; }
 .brand p { margin: 5px 0 0; font-size: 8px; letter-spacing: 1.8px; color: var(--subtle); }
@@ -69,9 +69,9 @@ textarea::placeholder { color: #7d8ca7; }
 .address { min-width: 0; flex: 1; font-family: ui-monospace,monospace; font-size: 10px; overflow-wrap: anywhere; }
 aside img { display: block; width: 100%; height: auto; }
 .empty { min-height: 456px; padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: radial-gradient(ellipse at center,#2851a017,transparent 70%); }
-.orbital-scene { width: min(100%,300px); position: relative; }
+.orbital-scene { width: min(65%,200px); position: relative; }
 .orbital-scene::before { content: ''; position: absolute; inset: 20% 25%; background: #5164ff2a; filter: blur(38px); pointer-events: none; }
-.orbital-scene svg { display: block; width: 100%; height: auto; position: relative; }
+.orbital-scene img { display: block; width: 100%; height: auto; position: relative; }
 h3 { margin: 0; font-weight: 500; font-size: 21px; letter-spacing: -.5px; }
 .empty p { color: var(--muted); font-size: 13px; line-height: 1.7; margin: 14px 0; max-width: 36ch; }
 .empty-note { color: #627392; font-size: 10px; margin-top: 20px; }
